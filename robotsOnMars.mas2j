@@ -12,7 +12,7 @@
 
 MAS robotsOnMars {
 
-    environment: example.Env(10)
+    environment: src.env.example.Env(10)
 
     agents: bob;
             alice;
