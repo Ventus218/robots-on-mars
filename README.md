@@ -2,9 +2,13 @@
 
 ## Abstract
 
+This project aims at creating a Jason MAS simulating the behaviour of multiple
+robots exploing and collecting samples on Mars.
+
 ### Rovers
 
-Some new rovers just arrived on Mars to explore the planet, their goals are:
+Some new rovers just arrived on Mars to explore the planet, their main goals
+are:
 
 - building a map of the area marking all points of interest
 - collect samples of specific rocks which may need drilling the terrain
