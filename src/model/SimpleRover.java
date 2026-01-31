@@ -1,4 +1,4 @@
-package src.env;
+package src.model;
 
 public class SimpleRover implements Rover {
     private final String name;

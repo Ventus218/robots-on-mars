@@ -1,6 +1,8 @@
-package src.env;
+package src.model;
 
 import java.util.*;
+import java.util.stream.IntStream;
+import src.utils.MapWithDefault;
 
 public class Mars {
 
@@ -74,6 +76,17 @@ public class Mars {
         assert Math.abs(coordinates.x()) <= positiveBound();
         assert Math.abs(coordinates.y()) <= positiveBound();
         return grid.get(coordinates);
+    }
+
+    public List<Cell> row(int y) {
+        return IntStream.range(negativeBound(), positiveBound()).mapToObj(x -> grid.get(new Coordinates(x, y)))
+                .toList();
+    }
+
+    public List<Cell> column(int x) {
+        return IntStream.iterate(positiveBound(), y -> y - 1).limit(side())
+                .mapToObj(y -> grid.get(new Coordinates(x, y)))
+                .toList();
     }
 
     public void addListener(Listener l) {

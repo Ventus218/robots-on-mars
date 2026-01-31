@@ -1,12 +1,8 @@
-package src.env.view;
+package src.view;
 
 import java.awt.*;
 import javax.swing.*;
-
-import src.env.Coordinates;
-import src.env.Mars;
-import src.env.Cell;
-
+import src.model.*;
 import java.util.*;
 
 class GridPanel extends JPanel implements Mars.Listener {
@@ -45,6 +41,7 @@ class GridPanel extends JPanel implements Mars.Listener {
                     case Cell.Sample() -> setCell(coordinates, Color.WHITE, "S", null);
                     case Cell.Rover(var name) -> setCell(coordinates, Color.GREEN, "", null);
                 }
+
             }
         }
         repaint();

@@ -1,8 +1,8 @@
-package src.env.view;
+package src.view;
 
 import java.awt.*;
 import javax.swing.*;
-import src.env.Mars;
+import src.model.Mars;
 
 public class AppFrame extends JFrame {
 

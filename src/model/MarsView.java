@@ -1,7 +1,8 @@
-package src.env;
+package src.model;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import src.utils.MapWithDefault;
 
 public class MarsView {
 

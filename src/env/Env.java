@@ -9,7 +9,8 @@ import jason.asSyntax.ASSyntax;
 import jason.asSyntax.Structure;
 import jason.asSyntax.parser.ParseException;
 import jason.environment.Environment;
-import src.env.view.AppFrame;
+import src.view.AppFrame;
+import src.model.*;
 
 public class Env extends Environment {
 

@@ -1,4 +1,4 @@
-package src.env;
+package src.model;
 
 public interface Rover {
     public String getName();

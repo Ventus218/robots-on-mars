@@ -1,4 +1,4 @@
-package src.env;
+package src.model;
 
 import java.util.Date;
 
