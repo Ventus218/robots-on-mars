@@ -5,22 +5,25 @@ import java.util.*;
 public class Mars {
 
     private Random random;
-    private final int size;
+    private final int bound;
+    private final int baseBound;
     private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Cell.Empty());
 
-    public Mars(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
-            int baseSize) {
-        this(fullSize, obstaclesDensity, samplesDensity, miningSpotsDensity, baseSize, System.currentTimeMillis());
+    public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
+            int baseSquareSide) {
+        this(squareSide, obstaclesDensity, samplesDensity, miningSpotsDensity, baseSquareSide,
+                System.currentTimeMillis());
     }
 
-    public Mars(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity, int baseSize,
+    public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
+            int baseSquareSide,
             long seed) {
         this.random = new Random(seed);
-        this.size = fullSize / 2;
+        this.bound = Math.abs(squareSide) / 2;
+        this.baseBound = Math.abs(baseSquareSide) / 2;
 
-        final var halfBaseSize = baseSize / 2;
-        for (var x = -halfBaseSize; x < halfBaseSize; x++) {
-            for (var y = -halfBaseSize; y < halfBaseSize; y++) {
+        for (var x = -baseBound; x < baseBound; x++) {
+            for (var y = -baseBound; y < baseBound; y++) {
                 grid.put(new Coordinates(x, y), new Cell.Base());
             }
         }
@@ -34,7 +37,7 @@ public class Mars {
         var toPlace = area() * density;
 
         while (toPlace > 0) {
-            final var coordinates = new Coordinates(randomInSize(), randomInSize());
+            final var coordinates = new Coordinates(randomInBounds(), randomInBounds());
             if (grid.get(coordinates).equals(new Cell.Empty())) {
                 grid.put(coordinates, cell);
                 toPlace -= 1;
@@ -43,19 +46,39 @@ public class Mars {
 
     }
 
-    private int randomInSize() {
-        return random.nextInt(-size, size + 1);
+    private int randomInBounds() {
+        return random.nextInt(negativeBound(), positiveBound() + 1);
     }
 
     private int area() {
-        return size * size;
+        return bound * bound * 4;
+    }
+
+    public int negativeBound() {
+        return -bound;
+    }
+
+    public int positiveBound() {
+        return bound;
+    }
+
+    public int getSide() {
+        return bound * 2;
+    }
+
+    public Cell cellAt(Coordinates coordinates) {
+        assert Math.abs(coordinates.x()) <= positiveBound();
+        assert Math.abs(coordinates.y()) <= positiveBound();
+        return grid.get(coordinates);
+    }
+
     }
 
     @Override
     public String toString() {
         final var builder = new StringBuilder();
-        for (var y = size; y >= -size; y--) {
-            for (var x = -size; x <= size; x++) {
+        for (var y = positiveBound(); y >= negativeBound(); y--) {
+            for (var x = negativeBound(); x <= positiveBound(); x++) {
                 final var coordinates = new Coordinates(x, y);
                 final var str = switch (grid.get(coordinates)) {
                     case Cell.Empty() -> "-";
@@ -71,4 +94,5 @@ public class Mars {
         }
         return builder.toString();
     }
+
 }
