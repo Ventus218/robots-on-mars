@@ -1,16 +1,21 @@
 package src.env;
 
+import java.util.logging.Logger;
+
+import javax.swing.SwingUtilities;
+
 // Environment code for project robotsOnMars
-
-import jason.asSyntax.*;
-import jason.environment.*;
-import jason.asSyntax.parser.*;
-
-import java.util.logging.*;
+import jason.asSyntax.ASSyntax;
+import jason.asSyntax.Structure;
+import jason.asSyntax.parser.ParseException;
+import jason.environment.Environment;
+import src.env.view.AppFrame;
 
 public class Env extends Environment {
 
     private Logger logger = Logger.getLogger("robotsOnMars." + Env.class.getName());
+
+    private Mars mars = new Mars(100, 0.05, 0.005, 0.01, 5);
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
@@ -21,6 +26,10 @@ public class Env extends Environment {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
+        SwingUtilities.invokeLater(() -> {
+            new AppFrame(mars).setVisible(true);
+        });
     }
 
     @Override

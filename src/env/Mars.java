@@ -4,10 +4,15 @@ import java.util.*;
 
 public class Mars {
 
+    public interface Listener {
+        void marsUpdated();
+    }
+
     private Random random;
     private final int bound;
     private final int baseBound;
     private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Cell.Empty());
+    private final List<Listener> listeners = new ArrayList<>();
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
             int baseSquareSide) {
@@ -71,6 +76,12 @@ public class Mars {
         return grid.get(coordinates);
     }
 
+    public void addListener(Listener l) {
+        this.listeners.add(l);
+    }
+
+    public void removeListener(Listener l) {
+        this.listeners.remove(l);
     }
 
     @Override
