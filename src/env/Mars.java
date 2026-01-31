@@ -16,14 +16,13 @@ public class Mars {
     }
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
-            int baseSquareSide,
-            long seed) {
+            int baseSquareSide, long seed) {
         this.random = new Random(seed);
         this.bound = Math.abs(squareSide) / 2;
         this.baseBound = Math.abs(baseSquareSide) / 2;
 
-        for (var x = -baseBound; x < baseBound; x++) {
-            for (var y = -baseBound; y < baseBound; y++) {
+        for (var x = -baseBound; x <= baseBound; x++) {
+            for (var y = -baseBound; y <= baseBound; y++) {
                 grid.put(new Coordinates(x, y), new Cell.Base());
             }
         }
@@ -51,7 +50,7 @@ public class Mars {
     }
 
     private int area() {
-        return bound * bound * 4;
+        return side() * side();
     }
 
     public int negativeBound() {
@@ -62,8 +61,8 @@ public class Mars {
         return bound;
     }
 
-    public int getSide() {
-        return bound * 2;
+    public int side() {
+        return bound * 2 + 1;
     }
 
     public Cell cellAt(Coordinates coordinates) {
