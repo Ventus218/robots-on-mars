@@ -2,18 +2,18 @@ package src.env;
 
 import java.util.*;
 
-public class EnvMap {
+public class Mars {
 
     private Random random;
     private final int size;
     private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Empty());
 
-    public EnvMap(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
+    public Mars(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
             int baseSize) {
         this(fullSize, obstaclesDensity, samplesDensity, miningSpotsDensity, baseSize, System.currentTimeMillis());
     }
 
-    public EnvMap(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity, int baseSize,
+    public Mars(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity, int baseSize,
             long seed) {
         this.random = new Random(seed);
         this.size = fullSize / 2;
@@ -65,7 +65,6 @@ public class EnvMap {
                     case Rover(var name) -> "R";
                     case Base() -> "B";
                 };
-
                 builder.append(str);
             }
             builder.append("\n");
