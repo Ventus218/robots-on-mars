@@ -6,48 +6,37 @@ public class EnvMap {
 
     private Random random;
     private final int size;
-    private final Map<Integer, Map<Integer, Cell>> grid = new HashMap<>();
+    private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Empty());
 
-    public EnvMap(int fullSize, float obstaclesDensity, float samplesDensity, float miningSpotsDensity, int baseSize,
-            int seed) {
+    public EnvMap(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
+            int baseSize) {
+        this(fullSize, obstaclesDensity, samplesDensity, miningSpotsDensity, baseSize, System.currentTimeMillis());
+    }
+
+    public EnvMap(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity, int baseSize,
+            long seed) {
         this.random = new Random(seed);
         this.size = fullSize / 2;
-        for (var x = -size; x < size; x++) {
-            final var column = new HashMap<Integer, Cell>();
-            grid.put(x, column);
-            for (var y = -size; y < size; y++) {
-                column.put(y, new Empty());
-            }
-        }
 
         final var halfBaseSize = baseSize / 2;
         for (var x = -halfBaseSize; x < halfBaseSize; x++) {
             for (var y = -halfBaseSize; y < halfBaseSize; y++) {
-                setCellAt(x, y, new Base());
+                grid.put(new Coordinates(x, y), new Base());
             }
         }
 
         placeWithDensity(new Obstacle(), obstaclesDensity);
-        placeWithDensity(new MiningSpot(), miningSpotsDensity);
+        placeWithDensity(new MiningSpot(false), miningSpotsDensity);
         placeWithDensity(new Sample(), samplesDensity);
     }
 
-    private void setCellAt(int x, int y, Cell cell) {
-        grid.get(x).put(y, cell);
-    }
-
-    private Cell getCellAt(int x, int y) {
-        return grid.get(x).get(y);
-    }
-
-    private void placeWithDensity(Cell cell, float density) {
+    private void placeWithDensity(Cell cell, double density) {
         var toPlace = area() * density;
 
         while (toPlace > 0) {
-            final var x = randomInSize();
-            final var y = randomInSize();
-            if (getCellAt(x, y).equals(new Empty())) {
-                setCellAt(x, y, cell);
+            final var coordinates = new Coordinates(randomInSize(), randomInSize());
+            if (grid.get(coordinates).equals(new Empty())) {
+                grid.put(coordinates, cell);
                 toPlace -= 1;
             }
         }
@@ -62,4 +51,25 @@ public class EnvMap {
         return size * size;
     }
 
+    @Override
+    public String toString() {
+        final var builder = new StringBuilder();
+        for (var y = size; y >= -size; y--) {
+            for (var x = -size; x <= size; x++) {
+                final var coordinates = new Coordinates(x, y);
+                final var str = switch (grid.get(coordinates)) {
+                    case Empty() -> "-";
+                    case Obstacle() -> "O";
+                    case Sample() -> "S";
+                    case MiningSpot(var mined) -> "X";
+                    case Rover(var name) -> "R";
+                    case Base() -> "B";
+                };
+
+                builder.append(str);
+            }
+            builder.append("\n");
+        }
+        return builder.toString();
+    }
 }
