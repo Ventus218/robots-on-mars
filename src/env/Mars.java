@@ -6,7 +6,7 @@ public class Mars {
 
     private Random random;
     private final int size;
-    private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Empty());
+    private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Cell.Empty());
 
     public Mars(int fullSize, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
             int baseSize) {
@@ -21,13 +21,13 @@ public class Mars {
         final var halfBaseSize = baseSize / 2;
         for (var x = -halfBaseSize; x < halfBaseSize; x++) {
             for (var y = -halfBaseSize; y < halfBaseSize; y++) {
-                grid.put(new Coordinates(x, y), new Base());
+                grid.put(new Coordinates(x, y), new Cell.Base());
             }
         }
 
-        placeWithDensity(new Obstacle(), obstaclesDensity);
-        placeWithDensity(new MiningSpot(false), miningSpotsDensity);
-        placeWithDensity(new Sample(), samplesDensity);
+        placeWithDensity(new Cell.Obstacle(), obstaclesDensity);
+        placeWithDensity(new Cell.MiningSpot(false), miningSpotsDensity);
+        placeWithDensity(new Cell.Sample(), samplesDensity);
     }
 
     private void placeWithDensity(Cell cell, double density) {
@@ -35,7 +35,7 @@ public class Mars {
 
         while (toPlace > 0) {
             final var coordinates = new Coordinates(randomInSize(), randomInSize());
-            if (grid.get(coordinates).equals(new Empty())) {
+            if (grid.get(coordinates).equals(new Cell.Empty())) {
                 grid.put(coordinates, cell);
                 toPlace -= 1;
             }
@@ -58,12 +58,12 @@ public class Mars {
             for (var x = -size; x <= size; x++) {
                 final var coordinates = new Coordinates(x, y);
                 final var str = switch (grid.get(coordinates)) {
-                    case Empty() -> "-";
-                    case Obstacle() -> "O";
-                    case Sample() -> "S";
-                    case MiningSpot(var mined) -> "X";
-                    case Rover(var name) -> "R";
-                    case Base() -> "B";
+                    case Cell.Empty() -> "-";
+                    case Cell.Obstacle() -> "O";
+                    case Cell.Sample() -> "S";
+                    case Cell.MiningSpot(var mined) -> "X";
+                    case Cell.Rover(var name) -> "R";
+                    case Cell.Base() -> "B";
                 };
                 builder.append(str);
             }
