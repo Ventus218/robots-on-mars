@@ -1,6 +1,6 @@
 package src.env;
 
-sealed interface Cell permits Cell.Rover, Cell.Empty, Cell.Obstacle, Cell.MiningSpot, Cell.Sample, Cell.Base {
+public sealed interface Cell permits Cell.Rover, Cell.Empty, Cell.Obstacle, Cell.MiningSpot, Cell.Sample, Cell.Base {
     record Rover(String name) implements Cell {
     }
 
