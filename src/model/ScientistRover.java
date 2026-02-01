@@ -9,22 +9,22 @@ public class ScientistRover implements Rover {
     }
 
     @Override
-    public String getName() {
-        return rover.getName();
+    public String name() {
+        return rover.name();
     }
 
     @Override
-    public int getBattery() {
-        return rover.getBattery();
+    public int battery() {
+        return rover.battery();
     }
 
     @Override
-    public int getCameraRange() {
-        return rover.getCameraRange();
+    public int cameraRange() {
+        return rover.cameraRange();
     }
 
     @Override
-    public int getAntennaRange() {
-        return rover.getAntennaRange();
+    public int antennaRange() {
+        return rover.antennaRange();
     }
 }

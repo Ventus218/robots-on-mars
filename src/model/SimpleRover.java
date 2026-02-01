@@ -15,22 +15,22 @@ public class SimpleRover implements Rover {
     }
 
     @Override
-    public String getName() {
+    public String name() {
         return name;
     }
 
     @Override
-    public int getBattery() {
+    public int battery() {
         return battery;
     }
 
     @Override
-    public int getCameraRange() {
+    public int cameraRange() {
         return cameraRange;
     }
 
     @Override
-    public int getAntennaRange() {
+    public int antennaRange() {
         return antennaRange;
     }
 }

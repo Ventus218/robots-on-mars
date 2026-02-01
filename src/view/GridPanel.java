@@ -33,23 +33,25 @@ class GridPanel extends JPanel implements Mars.Listener {
         for (var x = model.negativeBound(); x <= model.positiveBound(); x++) {
             for (var y = model.negativeBound(); y <= model.positiveBound(); y++) {
                 final var coordinates = new Coordinates(x, y);
-                switch (model.cellAt(new Coordinates(x, y))) {
-                    case Cell.Base() -> setCell(coordinates, Color.CYAN, "", null);
-                    case Cell.Obstacle() -> setCell(coordinates, Color.BLACK, "", null);
-                    case Cell.Empty() -> setCell(coordinates, Color.WHITE, "", null);
-                    case Cell.MiningSpot(var mined) -> setCell(coordinates, Color.WHITE, "M", null);
-                    case Cell.Sample() -> setCell(coordinates, Color.WHITE, "S", null);
-                    case Cell.Rover(var name) -> setCell(coordinates, Color.GREEN, "", null);
+                final var cellData = switch (model.terrainAt(new Coordinates(x, y))) {
+                    case Terrain.Base() -> new CellData(Color.CYAN, "", null);
+                    case Terrain.Obstacle() -> new CellData(Color.BLACK, "", null);
+                    case Terrain.Empty() -> new CellData(Color.WHITE, "", null);
+                    case Terrain.MiningSpot(var mined) -> new CellData(Color.WHITE, "M", null);
+                    case Terrain.Sample() -> new CellData(Color.WHITE, "S", null);
+                };
+                if (model.roverAtCoordinates(coordinates).isPresent()) {
+                    cellData.text = "R";
                 }
-
+                setCell(coordinates, cellData);
             }
         }
         repaint();
     }
 
-    private void setCell(Coordinates coordinates, Color color, String text, Image image) {
+    private void setCell(Coordinates coordinates, CellData cellData) {
         final var point = new Point(coordinates.x() + model.positiveBound(), coordinates.y() + model.positiveBound());
-        cells.put(point, new CellData(color, text, image));
+        cells.put(point, cellData);
     }
 
     @Override

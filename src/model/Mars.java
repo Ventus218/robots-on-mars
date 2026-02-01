@@ -12,7 +12,8 @@ public class Mars {
     private Random random;
     private final int bound;
     private final int baseBound;
-    private final Map<Coordinates, Cell> grid = new MapWithDefault<>(new Cell.Empty());
+    private final Map<Coordinates, Terrain> terrain = new MapWithDefault<>(new Terrain.Empty());
+    private final Map<Rover, Coordinates> roverCoordinates = new HashMap<>();
     private final List<Listener> listeners = new ArrayList<>();
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
@@ -29,22 +30,22 @@ public class Mars {
 
         for (var x = -baseBound; x <= baseBound; x++) {
             for (var y = -baseBound; y <= baseBound; y++) {
-                grid.put(new Coordinates(x, y), new Cell.Base());
+                terrain.put(new Coordinates(x, y), new Terrain.Base());
             }
         }
 
-        placeWithDensity(new Cell.Obstacle(), obstaclesDensity);
-        placeWithDensity(new Cell.MiningSpot(false), miningSpotsDensity);
-        placeWithDensity(new Cell.Sample(), samplesDensity);
+        placeWithDensity(new Terrain.Obstacle(), obstaclesDensity);
+        placeWithDensity(new Terrain.MiningSpot(false), miningSpotsDensity);
+        placeWithDensity(new Terrain.Sample(), samplesDensity);
     }
 
-    private void placeWithDensity(Cell cell, double density) {
+    private void placeWithDensity(Terrain t, double density) {
         var toPlace = area() * density;
 
         while (toPlace > 0) {
             final var coordinates = new Coordinates(randomInBounds(), randomInBounds());
-            if (grid.get(coordinates).equals(new Cell.Empty())) {
-                grid.put(coordinates, cell);
+            if (terrain.get(coordinates).equals(new Terrain.Empty())) {
+                terrain.put(coordinates, t);
                 toPlace -= 1;
             }
         }
@@ -71,10 +72,23 @@ public class Mars {
         return bound * 2 + 1;
     }
 
-    public Cell cellAt(Coordinates coordinates) {
+    public Terrain terrainAt(Coordinates coordinates) {
         assert Math.abs(coordinates.x()) <= positiveBound();
         assert Math.abs(coordinates.y()) <= positiveBound();
-        return grid.get(coordinates);
+        return terrain.get(coordinates);
+    }
+
+    public Set<Rover> rovers() {
+        return Collections.unmodifiableSet(roverCoordinates.keySet());
+    }
+
+    public Optional<Rover> roverAtCoordinates(Coordinates coordinates) {
+        return roverCoordinates.entrySet().stream().filter(e -> e.getValue().equals(coordinates)).map(e -> e.getKey())
+                .findFirst();
+    }
+
+    public Optional<Rover> rover(String name) {
+        return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
     }
 
     public void addListener(Listener l) {
@@ -91,14 +105,16 @@ public class Mars {
         for (var y = positiveBound(); y >= negativeBound(); y--) {
             for (var x = negativeBound(); x <= positiveBound(); x++) {
                 final var coordinates = new Coordinates(x, y);
-                final var str = switch (grid.get(coordinates)) {
-                    case Cell.Empty() -> "-";
-                    case Cell.Obstacle() -> "O";
-                    case Cell.Sample() -> "S";
-                    case Cell.MiningSpot(var mined) -> "X";
-                    case Cell.Rover(var name) -> "R";
-                    case Cell.Base() -> "B";
+                var str = switch (terrain.get(coordinates)) {
+                    case Terrain.Empty() -> "-";
+                    case Terrain.Obstacle() -> "O";
+                    case Terrain.Sample() -> "S";
+                    case Terrain.MiningSpot(var mined) -> "X";
+                    case Terrain.Base() -> "B";
                 };
+                if (roverAtCoordinates(coordinates).isPresent()) {
+                    str = "R";
+                }
                 builder.append(str);
             }
             builder.append("\n");

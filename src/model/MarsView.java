@@ -6,9 +6,9 @@ import src.utils.MapWithDefault;
 
 public class MarsView {
 
-    private final Map<Coordinates, CellView> view = new MapWithDefault<>(new Unknown());
+    private final Map<Coordinates, TerrainView> view = new MapWithDefault<>(new Unknown());
 
-    public Map<Coordinates, Known> knownCells() {
+    public Map<Coordinates, Known> knownTerrain() {
         return view.entrySet()
                 .stream()
                 .filter(entry -> entry.getValue() instanceof Known)
@@ -16,15 +16,15 @@ public class MarsView {
     }
 
     public void merge(MarsView other) {
-        other.knownCells().forEach((coord, cell) -> {
+        other.knownTerrain().forEach((coord, t) -> {
             switch (this.view.get(coord)) {
                 case Unknown():
-                    this.view.put(coord, cell);
+                    this.view.put(coord, t);
                     break;
-                case Known(var myCell, var timestamp):
+                case Known(var myTerrain, var timestamp):
                     // Updating my view if other has fresher information
-                    if (timestamp.before(cell.timestamp())) {
-                        this.view.put(coord, cell);
+                    if (timestamp.before(t.timestamp())) {
+                        this.view.put(coord, t);
                     }
                     break;
             }

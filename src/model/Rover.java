@@ -1,11 +1,11 @@
 package src.model;
 
 public interface Rover {
-    public String getName();
+    public String name();
 
-    public int getBattery();
+    public int battery();
 
-    public int getCameraRange();
+    public int cameraRange();
 
-    public int getAntennaRange();
+    public int antennaRange();
 }
