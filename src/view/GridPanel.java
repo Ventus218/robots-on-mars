@@ -4,6 +4,7 @@ import java.awt.*;
 import javax.swing.*;
 import src.model.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 class GridPanel extends JPanel implements Mars.Listener {
 
@@ -30,11 +31,14 @@ class GridPanel extends JPanel implements Mars.Listener {
     }
 
     private void redraw() {
+        final var areaCoveredByAntennas = model.rovers().stream().map(r -> model.antennaRangeOf(r))
+                .flatMap(Set::stream).collect(Collectors.toSet());
         for (var x = model.negativeBound(); x <= model.positiveBound(); x++) {
             for (var y = model.negativeBound(); y <= model.positiveBound(); y++) {
                 final var coordinates = new Coordinates(x, y);
-                final var cellData = switch (model.terrainAt(new Coordinates(x, y))) {
-                    case Terrain.Base() -> new CellData(Color.CYAN, "", null);
+                final var terrain = model.terrainAt(new Coordinates(x, y));
+                final var cellData = switch (terrain) {
+                    case Terrain.Base() -> new CellData(Color.BLUE, "", null);
                     case Terrain.Obstacle() -> new CellData(Color.BLACK, "", null);
                     case Terrain.Empty() -> new CellData(Color.WHITE, "", null);
                     case Terrain.MiningSpot(var mined) -> new CellData(Color.WHITE, "M", null);
@@ -42,6 +46,9 @@ class GridPanel extends JPanel implements Mars.Listener {
                 };
                 if (model.roverAtCoordinates(coordinates).isPresent()) {
                     cellData.text = "R";
+                }
+                if (areaCoveredByAntennas.contains(coordinates) && !(terrain instanceof Terrain.Base)) {
+                    cellData.color = Color.CYAN;
                 }
                 setCell(coordinates, cellData);
             }

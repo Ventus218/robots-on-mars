@@ -39,6 +39,19 @@ public class Mars {
         placeWithDensity(new Terrain.Sample(), samplesDensity);
     }
 
+    public void spawn(Rover r) {
+        var placed = false;
+
+        // TODO: warning, infinite loop if there is no space left in base
+        while (!placed) {
+            final var coordinates = new Coordinates(randomBaseBounds(), randomBaseBounds());
+            if (!roverAtCoordinates(coordinates).isPresent()) {
+                roverCoordinates.put(r, coordinates);
+                placed = true;
+            }
+        }
+    }
+
     private void placeWithDensity(Terrain t, double density) {
         var toPlace = area() * density;
 
@@ -54,6 +67,10 @@ public class Mars {
 
     private int randomInBounds() {
         return random.nextInt(negativeBound(), positiveBound() + 1);
+    }
+
+    private int randomBaseBounds() {
+        return random.nextInt(-baseBound, baseBound + 1);
     }
 
     private int area() {
@@ -97,6 +114,30 @@ public class Mars {
 
     public void removeListener(Listener l) {
         this.listeners.remove(l);
+    }
+
+    private Set<Coordinates> radiusOver(Coordinates coordinates, int radius) {
+        final Set<Coordinates> result = new HashSet<>();
+        final var r2 = radius * radius;
+
+        for (int x = coordinates.x() - radius; x <= coordinates.x() + radius; x++) {
+            for (int y = coordinates.y() - radius; y <= coordinates.y() + radius; y++) {
+                int dx = x - coordinates.x();
+                int dy = y - coordinates.y();
+                if (dx * dx + dy * dy <= r2) {
+                    result.add(new Coordinates(x, y));
+                }
+            }
+        }
+        return result;
+    }
+
+    public Set<Coordinates> cameraRangeOf(Rover r) {
+        return radiusOver(roverCoordinates.get(r), r.cameraRange());
+    }
+
+    public Set<Coordinates> antennaRangeOf(Rover r) {
+        return radiusOver(roverCoordinates.get(r), r.antennaRange());
     }
 
     @Override

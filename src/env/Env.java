@@ -22,6 +22,9 @@ public class Env extends Environment {
     @Override
     public void init(String[] args) {
         super.init(args);
+        mars.spawn(new SimpleRover("tony", 100, 10, 15));
+        mars.spawn(new SimpleRover("bill", 100, 10, 15));
+        mars.spawn(new ScientistRover("frank", 100, 10, 15));
         try {
             addPercept(ASSyntax.parseLiteral("percept(" + args[0] + ")"));
         } catch (ParseException e) {
