@@ -27,4 +27,9 @@ public class ScientistRover implements Rover {
     public int antennaRange() {
         return rover.antennaRange();
     }
+
+    @Override
+    public MarsView marsView() {
+        return this.rover.marsView();
+    }
 }

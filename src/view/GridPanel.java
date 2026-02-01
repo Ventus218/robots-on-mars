@@ -33,22 +33,33 @@ class GridPanel extends JPanel implements Mars.Listener {
     private void redraw() {
         final var areaCoveredByAntennas = model.rovers().stream().map(r -> model.antennaRangeOf(r))
                 .flatMap(Set::stream).collect(Collectors.toSet());
+        final var knownArea = model.knownArea();
         for (var x = model.negativeBound(); x <= model.positiveBound(); x++) {
             for (var y = model.negativeBound(); y <= model.positiveBound(); y++) {
                 final var coordinates = new Coordinates(x, y);
                 final var terrain = model.terrainAt(new Coordinates(x, y));
-                final var cellData = switch (terrain) {
-                    case Terrain.Base() -> new CellData(Color.BLUE, "", null);
-                    case Terrain.Obstacle() -> new CellData(Color.BLACK, "", null);
-                    case Terrain.Empty() -> new CellData(Color.WHITE, "", null);
-                    case Terrain.MiningSpot(var mined) -> new CellData(Color.WHITE, "M", null);
-                    case Terrain.Sample() -> new CellData(Color.WHITE, "S", null);
-                };
-                if (model.roverAtCoordinates(coordinates).isPresent()) {
-                    cellData.text = "R";
-                }
-                if (areaCoveredByAntennas.contains(coordinates) && !(terrain instanceof Terrain.Base)) {
-                    cellData.color = Color.CYAN;
+                final var cellData = new CellData(Color.GRAY, "", null);
+                if (knownArea.contains(coordinates)) {
+                    if (areaCoveredByAntennas.contains(coordinates)) {
+                        cellData.color = Color.CYAN;
+                    }
+                    switch (terrain) {
+                        case Terrain.Base() -> cellData.color = Color.BLUE;
+                        case Terrain.Obstacle() -> cellData.color = Color.BLACK;
+                        case Terrain.Empty() -> cellData.color = Color.WHITE;
+                        case Terrain.MiningSpot(var mined) -> {
+                            cellData.color = Color.ORANGE;
+                            if (mined) {
+                                cellData.text = "O";
+                            } else {
+                                cellData.text = "X";
+                            }
+                        }
+                        case Terrain.Sample() -> cellData.color = Color.WHITE;
+                    }
+                    if (model.roverAtCoordinates(coordinates).isPresent()) {
+                        cellData.text = "R";
+                    }
                 }
                 setCell(coordinates, cellData);
             }
@@ -68,7 +79,7 @@ class GridPanel extends JPanel implements Mars.Listener {
         Graphics2D g2 = (Graphics2D) g;
 
         // Draw grid
-        g2.setColor(Color.GRAY);
+        g2.setColor(Color.BLACK);
         for (int r = 0; r <= model.side(); r++) {
             g2.drawLine(0, r * cellSize, model.side() * cellSize, r * cellSize);
         }

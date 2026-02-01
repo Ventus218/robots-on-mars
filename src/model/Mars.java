@@ -1,6 +1,8 @@
 package src.model;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 import src.utils.MapWithDefault;
 
 public class Mars {
@@ -138,6 +140,11 @@ public class Mars {
 
     public Set<Coordinates> antennaRangeOf(Rover r) {
         return radiusOver(roverCoordinates.get(r), r.antennaRange());
+    }
+
+    public Set<Coordinates> knownArea() {
+        return rovers().stream().map(r -> r.marsView().knownTerrain().keySet()).flatMap(Set::stream)
+                .collect(Collectors.toSet());
     }
 
     @Override

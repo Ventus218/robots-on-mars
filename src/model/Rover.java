@@ -8,4 +8,6 @@ public interface Rover {
     public int cameraRange();
 
     public int antennaRange();
+
+    public MarsView marsView();
 }

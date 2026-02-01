@@ -33,4 +33,9 @@ public class SimpleRover implements Rover {
     public int antennaRange() {
         return antennaRange;
     }
+
+    @Override
+    public MarsView marsView() {
+        return this.view;
+    }
 }
