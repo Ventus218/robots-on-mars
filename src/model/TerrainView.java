@@ -2,11 +2,11 @@ package src.model;
 
 import java.util.Date;
 
-sealed interface TerrainView permits Known, Unknown {
-}
+public sealed interface TerrainView permits TerrainView.Known, TerrainView.Unknown {
 
-record Known(Terrain terrain, Date timestamp) implements TerrainView {
-}
+    record Known(Terrain terrain, Date timestamp) implements TerrainView {
+    }
 
-record Unknown() implements TerrainView {
+    record Unknown() implements TerrainView {
+    }
 }
