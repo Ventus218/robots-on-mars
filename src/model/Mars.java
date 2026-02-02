@@ -50,6 +50,8 @@ public class Mars {
             if (!roverAtCoordinates(coordinates).isPresent()) {
                 roverCoordinates.put(r, coordinates);
                 placed = true;
+                updateRoverView(r);
+                informListeners();
             }
         }
     }
@@ -108,6 +110,29 @@ public class Mars {
 
     public Optional<Rover> rover(String name) {
         return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
+    }
+
+    public void moveRover(Rover rover, RoverMotion motion) {
+        final var coordinates = roverCoordinates.get(rover);
+        final var newCoordinates = switch (motion) {
+            case RoverMotion.Up() -> new Coordinates(coordinates.x(), coordinates.y() + 1);
+            case RoverMotion.Down() -> new Coordinates(coordinates.x(), coordinates.y() - 1);
+            case RoverMotion.Left() -> new Coordinates(coordinates.x() - 1, coordinates.y());
+            case RoverMotion.Right() -> new Coordinates(coordinates.x() + 1, coordinates.y());
+        };
+        roverCoordinates.put(rover, newCoordinates);
+        updateRoverView(rover);
+        informListeners();
+    }
+
+    private void updateRoverView(Rover rover) {
+        final var view = cameraRangeOf(rover).stream()
+                .collect(Collectors.toMap(c -> c, c -> new TerrainView.Known(terrainAt(c), new Date())));
+        rover.marsView().updateView(view);
+    }
+
+    private void informListeners() {
+        listeners.stream().forEach(Listener::marsUpdated);
     }
 
     public void addListener(Listener l) {

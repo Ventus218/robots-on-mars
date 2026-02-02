@@ -4,8 +4,12 @@
 
 /* Initial goals */
 
-!start.
+!explore.
 
 /* Plans */
 
-+!start : true <- .print("hello world.").
++!explore <- 
+    moveInRandomDirection;
+    .wait(100);
+    !!explore.
+   

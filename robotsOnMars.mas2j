@@ -14,8 +14,10 @@ MAS robotsOnMars {
 
     environment: src.env.Env(10)
 
-    agents: bob;
-            alice;
+    agents: 
+        tony rover;
+        bill rover;
+        frank rover;
 
     aslSourcePath: "src/agt";
 }
