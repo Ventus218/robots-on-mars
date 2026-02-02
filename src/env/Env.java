@@ -35,7 +35,12 @@ public class Env extends Environment {
         }
 
         SwingUtilities.invokeLater(() -> {
-            new AppFrame(mars).setVisible(true);
+            try {
+                new AppFrame(mars).setVisible(true);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
         });
     }
 

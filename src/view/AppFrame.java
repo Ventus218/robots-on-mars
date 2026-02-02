@@ -1,6 +1,8 @@
 package src.view;
 
 import java.awt.*;
+import java.io.IOException;
+
 import javax.swing.*;
 import src.model.Mars;
 
@@ -8,7 +10,7 @@ public class AppFrame extends JFrame {
 
     private GridPanel gridPanel;
 
-    public AppFrame(Mars model) {
+    public AppFrame(Mars model) throws IOException {
         super("Robots on Mars");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

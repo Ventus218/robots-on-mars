@@ -1,6 +1,9 @@
 package src.view;
 
 import java.awt.*;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import src.model.*;
 import java.util.*;
@@ -10,12 +13,21 @@ class GridPanel extends JPanel implements Mars.Listener {
 
     private final Mars model;
     private final int cellSize;
+    private final Image miningSpotImg;
+    private final Image minedSpotImg;
+    private final Image sampleImg;
+    private final Image obstacleImg;
+    private final Color terrainColor = new Color(243, 147, 107);
 
     private final Map<Point, CellData> cells = new HashMap<>();
 
-    public GridPanel(Mars model, int cellSize) {
+    public GridPanel(Mars model, int cellSize) throws IOException {
         this.model = model;
         this.cellSize = cellSize;
+        miningSpotImg = ImageIO.read(getClass().getResource("/mining_spot.png"));
+        minedSpotImg = ImageIO.read(getClass().getResource("/mined_spot.png"));
+        sampleImg = ImageIO.read(getClass().getResource("/sample.png"));
+        obstacleImg = ImageIO.read(getClass().getResource("/obstacle.png"));
 
         int size = model.side() * cellSize;
         setPreferredSize(new Dimension(size, size));
@@ -40,22 +52,23 @@ class GridPanel extends JPanel implements Mars.Listener {
                 final var terrain = model.terrainAt(new Coordinates(x, y));
                 final var cellData = new CellData(Color.GRAY, "", null);
                 if (knownArea.contains(coordinates)) {
+                    cellData.color = terrainColor;
                     if (areaCoveredByAntennas.contains(coordinates)) {
                         cellData.color = Color.CYAN;
                     }
                     switch (terrain) {
                         case Terrain.Base() -> cellData.color = Color.BLUE;
-                        case Terrain.Obstacle() -> cellData.color = Color.BLACK;
-                        case Terrain.Empty() -> cellData.color = Color.WHITE;
+                        case Terrain.Obstacle() -> cellData.image = obstacleImg;
+                        case Terrain.Empty() -> {
+                        }
+                        case Terrain.Sample() -> cellData.image = sampleImg;
                         case Terrain.MiningSpot(var mined) -> {
-                            cellData.color = Color.ORANGE;
                             if (mined) {
-                                cellData.text = "O";
+                                cellData.image = minedSpotImg;
                             } else {
-                                cellData.text = "X";
+                                cellData.image = miningSpotImg;
                             }
                         }
-                        case Terrain.Sample() -> cellData.color = Color.WHITE;
                     }
                     if (model.roverAtCoordinates(coordinates).isPresent()) {
                         cellData.text = "R";
@@ -78,15 +91,6 @@ class GridPanel extends JPanel implements Mars.Listener {
 
         Graphics2D g2 = (Graphics2D) g;
 
-        // Draw grid
-        g2.setColor(Color.BLACK);
-        for (int r = 0; r <= model.side(); r++) {
-            g2.drawLine(0, r * cellSize, model.side() * cellSize, r * cellSize);
-        }
-        for (int c = 0; c <= model.side(); c++) {
-            g2.drawLine(c * cellSize, 0, c * cellSize, model.side() * cellSize);
-        }
-
         // Draw cells
         for (Map.Entry<Point, CellData> entry : cells.entrySet()) {
             Point p = entry.getKey();
@@ -98,7 +102,7 @@ class GridPanel extends JPanel implements Mars.Listener {
             // Fill color
             if (data.color != null) {
                 g2.setColor(data.color);
-                g2.fillRect(x + 1, y + 1, cellSize - 1, cellSize - 1);
+                g2.fillRect(x, y, cellSize, cellSize);
             }
 
             // Draw image
