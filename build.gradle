@@ -38,7 +38,7 @@ sourceSets {
             srcDir '.' // some old jason apps store .java files in project root
         }
         resources {
-            srcDir 'src/resources'
+            srcDir 'resources'
         }
     }
 }
@@ -52,6 +52,10 @@ task run (type: JavaExec, dependsOn: 'classes') {
 	//     args = ['robotsOnMars.mas2j', '--debug', '--no-net', '--empty-mas']
 	//     args = ['robotsOnMars.mas2j', '--log-conf', 'l.p'] // to use file l.p to configure logging
     classpath sourceSets.main.runtimeClasspath
+}
+
+tasks.compileJava {
+    inputs.files(tasks.processResources.outputs.files)
 }
 
 task runJade (type: JavaExec, dependsOn: 'classes') {
