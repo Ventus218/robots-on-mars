@@ -48,7 +48,7 @@ public class Mars {
 
         // TODO: warning, infinite loop if there is no space left in base
         while (!placed) {
-            final var coordinates = new Coordinates(randomBaseBounds(), randomBaseBounds());
+            final var coordinates = new Coordinates(randomInBaseBounds(), randomInBaseBounds());
             if (!roverAtCoordinates(coordinates).isPresent()) {
                 roverCoordinates.put(r, coordinates);
                 placed = true;
@@ -75,7 +75,7 @@ public class Mars {
         return random.nextInt(negativeBound(), positiveBound() + 1);
     }
 
-    private int randomBaseBounds() {
+    private int randomInBaseBounds() {
         return random.nextInt(base.negativeBound(), base.positiveBound() + 1);
     }
 
