@@ -114,7 +114,7 @@ public class Mars {
         return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
     }
 
-    public void moveRover(Rover rover, Direction motion) {
+    private void moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
         final var newCoordinates = switch (motion) {
             case Direction.Up() -> new Coordinates(coordinates.x(), coordinates.y() + 1);
@@ -125,7 +125,6 @@ public class Mars {
         if (Math.abs(newCoordinates.x()) <= positiveBound() && Math.abs(coordinates.y()) <= positiveBound()) {
             roverCoordinates.put(rover, newCoordinates);
             updateRoverView(rover);
-            informListeners();
         }
     }
 
@@ -133,6 +132,17 @@ public class Mars {
         final var view = cameraRangeOf(rover).stream()
                 .collect(Collectors.toMap(c -> c, c -> new TerrainView.Known(terrainAt(c), new Date())));
         rover.marsView().updateView(view);
+    }
+
+    public void performAction(Action action) {
+        switch (action) {
+            case Action.Move(var r, var dir) -> moveRover(r, dir);
+            case Action.MapMars(var r) -> updateRoverView(r);
+            case Action.ExchangeKnowledge(var r, var other) -> r.exchangeMarsView(other);
+            default -> {
+            }
+        }
+        informListeners();
     }
 
     private void informListeners() {
