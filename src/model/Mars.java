@@ -122,9 +122,11 @@ public class Mars {
             case Direction.Left() -> new Coordinates(coordinates.x() - 1, coordinates.y());
             case Direction.Right() -> new Coordinates(coordinates.x() + 1, coordinates.y());
         };
-        roverCoordinates.put(rover, newCoordinates);
-        updateRoverView(rover);
-        informListeners();
+        if (Math.abs(newCoordinates.x()) <= positiveBound() && Math.abs(coordinates.y()) <= positiveBound()) {
+            roverCoordinates.put(rover, newCoordinates);
+            updateRoverView(rover);
+            informListeners();
+        }
     }
 
     private void updateRoverView(Rover rover) {
