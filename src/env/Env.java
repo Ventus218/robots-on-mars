@@ -36,11 +36,6 @@ public class Env extends Environment {
             MARS_MINING_SPOTS_DENSITY,
             MARS_BASE_SIZE,
             MARS_BASE_ANTENNA_RANGE);
-    public static final Literal moveLiteral = ASSyntax.createLiteral("moveInRandomDirection");
-    public static final Literal canMoveUpLit = ASSyntax.createLiteral("canMove(up)");
-    public static final Literal canMoveDownLit = ASSyntax.createLiteral("canMove(down)");
-    public static final Literal canMoveLeftLit = ASSyntax.createLiteral("canMove(left)");
-    public static final Literal canMoveRightLit = ASSyntax.createLiteral("canMove(right)");
 
     private Rover simpleRoverNamed(String name) {
         return new SimpleRover(name, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE, ROVER_ANTENNA_RANGE);
@@ -75,7 +70,7 @@ public class Env extends Environment {
 
     @Override
     public boolean executeAction(String agName, Structure action) {
-        if (action.equals(moveLiteral)) {
+        if (action.equals(Lit.moveInRandomDirection)) {
             mars.performAction(new Action.Move(mars.rover(agName).get(), Direction.random()));
         }
 
@@ -91,10 +86,10 @@ public class Env extends Environment {
         final var rover = mars.rover(agName).get();
         final var canMovePercepts = mars.availableDirections(rover).stream()
                 .map(d -> switch (d) {
-                    case Direction.Up() -> canMoveUpLit;
-                    case Direction.Down() -> canMoveDownLit;
-                    case Direction.Left() -> canMoveLeftLit;
-                    case Direction.Right() -> canMoveRightLit;
+                    case Direction.Up() -> Lit.canMoveUp;
+                    case Direction.Down() -> Lit.canMoveDown;
+                    case Direction.Left() -> Lit.canMoveLeft;
+                    case Direction.Right() -> Lit.canMoveRight;
                 })
                 .toList();
 
@@ -106,5 +101,14 @@ public class Env extends Environment {
     @Override
     public void stop() {
         super.stop();
+    }
+
+    // Group literals
+    private static interface Lit {
+        public static final Literal moveInRandomDirection = ASSyntax.createLiteral("moveInRandomDirection");
+        public static final Literal canMoveUp = ASSyntax.createLiteral("canMove(up)");
+        public static final Literal canMoveDown = ASSyntax.createLiteral("canMove(down)");
+        public static final Literal canMoveLeft = ASSyntax.createLiteral("canMove(left)");
+        public static final Literal canMoveRight = ASSyntax.createLiteral("canMove(right)");
     }
 }
