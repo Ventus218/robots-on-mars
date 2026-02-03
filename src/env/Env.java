@@ -1,6 +1,8 @@
 package src.env;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
@@ -35,6 +37,10 @@ public class Env extends Environment {
             MARS_BASE_SIZE,
             MARS_BASE_ANTENNA_RANGE);
     public static final Literal moveLiteral = ASSyntax.createLiteral("moveInRandomDirection");
+    public static final Literal canMoveUpLit = ASSyntax.createLiteral("canMove(up)");
+    public static final Literal canMoveDownLit = ASSyntax.createLiteral("canMove(down)");
+    public static final Literal canMoveLeftLit = ASSyntax.createLiteral("canMove(left)");
+    public static final Literal canMoveRightLit = ASSyntax.createLiteral("canMove(right)");
 
     private Rover simpleRoverNamed(String name) {
         return new SimpleRover(name, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE, ROVER_ANTENNA_RANGE);
@@ -78,6 +84,22 @@ public class Env extends Environment {
             informAgsEnvironmentChanged();
         }
         return true; // the action was executed with success
+    }
+
+    @Override
+    public Collection<Literal> getPercepts(String agName) {
+        final var rover = mars.rover(agName).get();
+        final var canMovePercepts = mars.availableDirections(rover).stream()
+                .map(d -> switch (d) {
+                    case Direction.Up() -> canMoveUpLit;
+                    case Direction.Down() -> canMoveDownLit;
+                    case Direction.Left() -> canMoveLeftLit;
+                    case Direction.Right() -> canMoveRightLit;
+                })
+                .toList();
+
+        // Flattening the lists
+        return List.of(canMovePercepts).stream().flatMap(List::stream).toList();
     }
 
     /** Called before the end of MAS execution */

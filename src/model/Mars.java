@@ -116,13 +116,9 @@ public class Mars {
 
     private void moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
-        final var newCoordinates = switch (motion) {
-            case Direction.Up() -> new Coordinates(coordinates.x(), coordinates.y() + 1);
-            case Direction.Down() -> new Coordinates(coordinates.x(), coordinates.y() - 1);
-            case Direction.Left() -> new Coordinates(coordinates.x() - 1, coordinates.y());
-            case Direction.Right() -> new Coordinates(coordinates.x() + 1, coordinates.y());
-        };
-        if (Math.abs(newCoordinates.x()) <= positiveBound() && Math.abs(coordinates.y()) <= positiveBound()) {
+        final var newCoordinates = motion.applyTo(coordinates);
+        if (Math.abs(newCoordinates.x()) <= positiveBound() && Math.abs(newCoordinates.y()) <= positiveBound()
+                && canBeMovedOn(newCoordinates)) {
             roverCoordinates.put(rover, newCoordinates);
             updateRoverView(rover);
         }
@@ -171,6 +167,20 @@ public class Mars {
             }
         }
         return result;
+    }
+
+    public Set<Direction> availableDirections(Rover r) {
+        return Direction.all().stream()
+                .filter(d -> canBeMovedOn(d.applyTo(roverCoordinates.get(r))))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean canBeMovedOn(Coordinates coordinates) {
+        return switch (terrainAt(coordinates)) {
+            case Terrain.Obstacle() -> false;
+            case Terrain.MiningSpot(var mined) -> false;
+            default -> true;
+        } && roverAtCoordinates(coordinates).isEmpty();
     }
 
     public Set<Coordinates> cameraRangeOf(Rover r) {
