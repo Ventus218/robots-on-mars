@@ -5,13 +5,14 @@ public class SimpleRover implements Rover {
     private final int battery;
     private final int cameraRange;
     private final int antennaRange;
-    private final MarsView view = new MarsView();
+    private final MarsViewExchangerImpl marsViewExchanger;
 
     public SimpleRover(String name, int battery, int cameraRange, int antennaRange) {
         this.name = name;
         this.battery = battery;
         this.cameraRange = cameraRange;
         this.antennaRange = antennaRange;
+        this.marsViewExchanger = new MarsViewExchangerImpl(new MarsView());
     }
 
     @Override
@@ -36,6 +37,11 @@ public class SimpleRover implements Rover {
 
     @Override
     public MarsView marsView() {
-        return this.view;
+        return this.marsViewExchanger.marsView();
+    }
+
+    @Override
+    public void exchangeMarsView(MarsViewExchanger other) {
+        this.marsViewExchanger.exchangeMarsView(other);
     }
 }

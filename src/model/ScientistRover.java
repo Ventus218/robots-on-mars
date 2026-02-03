@@ -32,4 +32,9 @@ public class ScientistRover implements Rover {
     public MarsView marsView() {
         return this.rover.marsView();
     }
+
+    @Override
+    public void exchangeMarsView(MarsViewExchanger other) {
+        this.rover.exchangeMarsView(other);
+    }
 }

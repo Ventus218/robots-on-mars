@@ -1,6 +1,6 @@
 package src.model;
 
-public interface Rover {
+public interface Rover extends MarsViewExchanger {
     public String name();
 
     public int battery();
@@ -8,6 +8,4 @@ public interface Rover {
     public int cameraRange();
 
     public int antennaRange();
-
-    public MarsView marsView();
 }
