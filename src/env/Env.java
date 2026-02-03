@@ -47,7 +47,7 @@ public class Env extends Environment {
     @Override
     public boolean executeAction(String agName, Structure action) {
         if (action.equals(moveLiteral)) {
-            mars.moveRover(mars.rover(agName).get(), RoverMotion.random());
+            mars.moveRover(mars.rover(agName).get(), Direction.random());
         }
 
         logger.info("executing: " + action + ", but not implemented!");

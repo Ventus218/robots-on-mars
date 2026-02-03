@@ -112,13 +112,13 @@ public class Mars {
         return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
     }
 
-    public void moveRover(Rover rover, RoverMotion motion) {
+    public void moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
         final var newCoordinates = switch (motion) {
-            case RoverMotion.Up() -> new Coordinates(coordinates.x(), coordinates.y() + 1);
-            case RoverMotion.Down() -> new Coordinates(coordinates.x(), coordinates.y() - 1);
-            case RoverMotion.Left() -> new Coordinates(coordinates.x() - 1, coordinates.y());
-            case RoverMotion.Right() -> new Coordinates(coordinates.x() + 1, coordinates.y());
+            case Direction.Up() -> new Coordinates(coordinates.x(), coordinates.y() + 1);
+            case Direction.Down() -> new Coordinates(coordinates.x(), coordinates.y() - 1);
+            case Direction.Left() -> new Coordinates(coordinates.x() - 1, coordinates.y());
+            case Direction.Right() -> new Coordinates(coordinates.x() + 1, coordinates.y());
         };
         roverCoordinates.put(rover, newCoordinates);
         updateRoverView(rover);
