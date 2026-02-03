@@ -17,17 +17,40 @@ import src.model.*;
 public class Env extends Environment {
 
     private Logger logger = Logger.getLogger("robotsOnMars." + Env.class.getName());
+    private final int MARS_SIZE = 100;
+    private final float MARS_OBSTACLES_DENSITY = 0.05f;
+    private final float MARS_SAMPLES_DENSITY = 0.005f;
+    private final float MARS_MINING_SPOTS_DENSITY = 0.01f;
+    private final int MARS_BASE_SIZE = 4;
+    private final int MARS_BASE_ANTENNA_RANGE = 10;
+    private final int ROVER_BATTERY_CAPACITY = 100;
+    private final int ROVER_CAMERA_RANGE = 10;
+    private final int ROVER_ANTENNA_RANGE = 7;
 
-    private Mars mars = new Mars(100, 0.05, 0.005, 0.01, 5);
+    private Mars mars = new Mars(
+            MARS_SIZE,
+            MARS_OBSTACLES_DENSITY,
+            MARS_SAMPLES_DENSITY,
+            MARS_MINING_SPOTS_DENSITY,
+            MARS_BASE_SIZE,
+            MARS_BASE_ANTENNA_RANGE);
     public static final Literal moveLiteral = ASSyntax.createLiteral("moveInRandomDirection");
+
+    private Rover simpleRoverNamed(String name) {
+        return new SimpleRover(name, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE, ROVER_ANTENNA_RANGE);
+    }
+
+    private Rover scientistRoverNamed(String name) {
+        return new ScientistRover(name, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE, ROVER_ANTENNA_RANGE);
+    }
 
     /** Called before the MAS execution with the args informed in .mas2j */
     @Override
     public void init(String[] args) {
         super.init(args);
-        mars.spawn(new SimpleRover("tony", 100, 10, 7));
-        mars.spawn(new SimpleRover("bill", 100, 10, 7));
-        mars.spawn(new ScientistRover("frank", 100, 10, 7));
+        mars.spawn(simpleRoverNamed("tony"));
+        mars.spawn(simpleRoverNamed("bill"));
+        mars.spawn(scientistRoverNamed("frank"));
         try {
             addPercept(ASSyntax.parseLiteral("percept(" + args[0] + ")"));
         } catch (ParseException e) {

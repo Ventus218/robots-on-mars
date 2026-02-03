@@ -45,6 +45,7 @@ class GridPanel extends JPanel implements Mars.Listener {
     private void redraw() {
         final var areaCoveredByAntennas = model.rovers().stream().map(r -> model.antennaRangeOf(r))
                 .flatMap(Set::stream).collect(Collectors.toSet());
+        areaCoveredByAntennas.addAll(model.antennaRangeOfBase());
         final var knownArea = model.knownArea();
         for (var x = model.negativeBound(); x <= model.positiveBound(); x++) {
             for (var y = model.negativeBound(); y <= model.positiveBound(); y++) {

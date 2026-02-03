@@ -13,25 +13,27 @@ public class Mars {
 
     private Random random;
     private final int bound;
-    private final int baseBound;
+    private final Base base;
+    private final Coordinates baseCenter;
     private final Map<Coordinates, Terrain> terrain = new MapWithDefault<>(new Terrain.Empty());
     private final Map<Rover, Coordinates> roverCoordinates = new HashMap<>();
     private final List<Listener> listeners = new ArrayList<>();
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
-            int baseSquareSide) {
-        this(squareSide, obstaclesDensity, samplesDensity, miningSpotsDensity, baseSquareSide,
+            int baseSquareSide, int baseAntennaRange) {
+        this(squareSide, obstaclesDensity, samplesDensity, miningSpotsDensity, baseSquareSide, baseAntennaRange,
                 System.currentTimeMillis());
     }
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
-            int baseSquareSide, long seed) {
+            int baseSquareSide, int baseAntennaRange, long seed) {
         this.random = new Random(seed);
         this.bound = Math.abs(squareSide) / 2;
-        this.baseBound = Math.abs(baseSquareSide) / 2;
+        this.base = new Base(baseSquareSide, baseAntennaRange);
+        this.baseCenter = new Coordinates(0, 0);
 
-        for (var x = -baseBound; x <= baseBound; x++) {
-            for (var y = -baseBound; y <= baseBound; y++) {
+        for (var x = base.negativeBound(); x <= base.positiveBound(); x++) {
+            for (var y = base.negativeBound(); y <= base.positiveBound(); y++) {
                 terrain.put(new Coordinates(x, y), new Terrain.Base());
             }
         }
@@ -74,7 +76,7 @@ public class Mars {
     }
 
     private int randomBaseBounds() {
-        return random.nextInt(-baseBound, baseBound + 1);
+        return random.nextInt(base.negativeBound(), base.positiveBound() + 1);
     }
 
     private int area() {
@@ -165,6 +167,10 @@ public class Mars {
 
     public Set<Coordinates> antennaRangeOf(Rover r) {
         return radiusOver(roverCoordinates.get(r), r.antennaRange());
+    }
+
+    public Set<Coordinates> antennaRangeOfBase() {
+        return radiusOver(baseCenter, base.antennaRange());
     }
 
     public Set<Coordinates> knownArea() {
