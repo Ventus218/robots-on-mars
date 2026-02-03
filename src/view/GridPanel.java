@@ -19,7 +19,7 @@ class GridPanel extends JPanel implements Mars.Listener {
     private final Image obstacleImg;
     private final Color terrainColor = new Color(243, 147, 107);
 
-    private final Map<Point, CellData> cells = new HashMap<>();
+    private final Map<Coordinates, CellData> cells = new HashMap<>();
 
     public GridPanel(Mars model, int cellSize) throws IOException {
         this.model = model;
@@ -82,8 +82,11 @@ class GridPanel extends JPanel implements Mars.Listener {
     }
 
     private void setCell(Coordinates coordinates, CellData cellData) {
-        final var point = new Point(coordinates.x() + model.positiveBound(), coordinates.y() + model.positiveBound());
-        cells.put(point, cellData);
+        final int x = coordinates.x() + model.positiveBound();
+        // Translate coordinate system
+        final int y = model.side() - (coordinates.y() + model.positiveBound());
+
+        cells.put(new Coordinates(x, y), cellData);
     }
 
     @Override
@@ -93,12 +96,12 @@ class GridPanel extends JPanel implements Mars.Listener {
         Graphics2D g2 = (Graphics2D) g;
 
         // Draw cells
-        for (Map.Entry<Point, CellData> entry : cells.entrySet()) {
-            Point p = entry.getKey();
+        for (Map.Entry<Coordinates, CellData> entry : cells.entrySet()) {
+            Coordinates p = entry.getKey();
             CellData data = entry.getValue();
 
-            int x = p.x * cellSize;
-            int y = p.y * cellSize;
+            int x = p.x() * cellSize;
+            int y = p.y() * cellSize;
 
             // Fill color
             if (data.color != null) {
