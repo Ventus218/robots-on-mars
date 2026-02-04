@@ -1,9 +1,11 @@
 package src.model;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import src.utils.MapWithDefault;
+import src.utils.Tuple;
 
 public class Mars {
 
@@ -43,7 +45,7 @@ public class Mars {
         placeWithDensity(new Terrain.Sample(), samplesDensity);
     }
 
-    public void spawn(Rover r) {
+    synchronized public void spawn(Rover r) {
         var placed = false;
 
         // TODO: warning, infinite loop if there is no space left in base
@@ -120,8 +122,42 @@ public class Mars {
         if (Math.abs(newCoordinates.x()) <= positiveBound() && Math.abs(newCoordinates.y()) <= positiveBound()
                 && canBeMovedOn(newCoordinates)) {
             roverCoordinates.put(rover, newCoordinates);
-            updateRoverView(rover);
+            updateRoverView(rover); // TODO: remove from here
         }
+    }
+
+    public List<Direction> bestExploreDirections(Rover rover) {
+        final var roverCoord = roverCoordinates.get(rover);
+        final var knownCoord = rover.marsView().knownTerrain().keySet();
+        final Function<Coordinates, Boolean> isBorder = coord -> coord.neighbours().stream()
+                .map(c -> knownCoord.contains(c))
+                .anyMatch(hasKnownNeighbour -> hasKnownNeighbour);
+
+        final var unknownCoord = allCoordinates().stream()
+                .filter(c -> !knownCoord.contains(c) && isBorder.apply(c))
+                .sorted(Comparator.comparingDouble(c -> c.distanceTo(roverCoord)))
+                .toList();
+
+        final var target = unknownCoord.stream()
+                .map(c -> {
+                    final var nearToRover = 1 / c.distanceTo(roverCoord);
+                    final var nearToBase = 1 / c.distanceTo(baseCenter);
+                    final var value = 0.9 * nearToRover + 0.1 * nearToBase;
+                    return Tuple.of(c, value);
+                })
+                .sorted(Comparator.<Tuple<Coordinates, Double>>comparingDouble(t -> t._2()).reversed())
+                .findFirst().get()._1();
+        return roverCoord.directionsTowards(target).stream().filter(d -> canBeMovedOn(d.applyTo(roverCoord))).toList();
+    }
+
+    private Set<Coordinates> allCoordinates() {
+        final var result = new HashSet<Coordinates>();
+        for (var x = negativeBound(); x <= positiveBound(); x++) {
+            for (var y = negativeBound(); y <= positiveBound(); y++) {
+                result.add(new Coordinates(x, y));
+            }
+        }
+        return result;
     }
 
     private void updateRoverView(Rover rover) {
@@ -130,7 +166,7 @@ public class Mars {
         rover.marsView().updateView(view);
     }
 
-    public void performAction(Action action) {
+    synchronized public void performAction(Action action) {
         switch (action) {
             case Action.Move(var r, var dir) -> moveRover(r, dir);
             case Action.MapMars(var r) -> updateRoverView(r);
@@ -180,7 +216,8 @@ public class Mars {
             case Terrain.Obstacle() -> false;
             case Terrain.MiningSpot(var mined) -> false;
             default -> true;
-        } && roverAtCoordinates(coordinates).isEmpty();
+        } && roverAtCoordinates(coordinates).isEmpty() && Math.abs(coordinates.x()) <= positiveBound()
+                && Math.abs(coordinates.y()) <= positiveBound();
     }
 
     public Set<Coordinates> cameraRangeOf(Rover r) {

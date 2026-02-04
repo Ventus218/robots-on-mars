@@ -49,9 +49,6 @@ public class Env extends Environment {
     @Override
     public void init(String[] args) {
         super.init(args);
-        mars.spawn(simpleRoverNamed("tony"));
-        mars.spawn(simpleRoverNamed("bill"));
-        mars.spawn(scientistRoverNamed("frank"));
         try {
             addPercept(ASSyntax.parseLiteral("percept(" + args[0] + ")"));
         } catch (ParseException e) {
@@ -70,8 +67,12 @@ public class Env extends Environment {
 
     @Override
     public boolean executeAction(String agName, Structure action) {
+        final var rover = spawnIfMissing(agName);
         if (action.equals(Lit.moveInRandomDirection)) {
-            mars.performAction(new Action.Move(mars.rover(agName).get(), Direction.random()));
+            final var direction = mars.bestExploreDirections(rover).stream()
+                    .findFirst()
+                    .orElse(Direction.random());
+            mars.performAction(new Action.Move(rover, direction));
         }
 
         logger.info("executing: " + action + ", but not implemented!");
@@ -83,7 +84,7 @@ public class Env extends Environment {
 
     @Override
     public Collection<Literal> getPercepts(String agName) {
-        final var rover = mars.rover(agName).get();
+        final var rover = spawnIfMissing(agName);
         final var canMovePercepts = mars.availableDirections(rover).stream()
                 .map(d -> switch (d) {
                     case Direction.Up() -> Lit.canMoveUp;
@@ -95,6 +96,14 @@ public class Env extends Environment {
 
         // Flattening the lists
         return List.of(canMovePercepts).stream().flatMap(List::stream).toList();
+    }
+
+    private Rover spawnIfMissing(String agName) {
+        return mars.rover(agName).orElseGet(() -> {
+            final var rover = simpleRoverNamed(agName);
+            mars.spawn(rover);
+            return rover;
+        });
     }
 
     /** Called before the end of MAS execution */

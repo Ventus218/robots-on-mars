@@ -10,6 +10,6 @@
 
 +!explore <- 
     moveInRandomDirection;
-    .wait(100);
+    .wait(30);
     !!explore.
    
