@@ -252,6 +252,11 @@ public class Mars {
                 .collect(Collectors.toSet());
     }
 
+    synchronized public void roverBelievesCell(Rover r, Coordinates c, Terrain t) {
+        r.marsView().updateView(Map.of(c, new TerrainView.Known(t)));
+        informListeners();
+    }
+
     public Base base() {
         return base;
     }
