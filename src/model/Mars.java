@@ -125,6 +125,21 @@ public class Mars {
         }
     }
 
+    public List<Rover> reachableRovers(Rover rover) {
+        final var roverCoord = roverCoordinates.get(rover);
+        return roverCoordinates.entrySet().stream()
+                .filter(e -> e.getKey() != rover)
+                .filter(e -> e.getValue().distanceTo(roverCoord) <= rover.antennaRange())
+                .map(e -> e.getKey())
+                .toList();
+
+    }
+
+    public boolean canReachBase(Rover rover) {
+        final var roverCoord = roverCoordinates.get(rover);
+        return roverCoord.distanceTo(baseCenter) <= rover.antennaRange();
+    }
+
     public List<Direction> bestExploreDirections(Rover rover) {
         final var roverCoord = roverCoordinates.get(rover);
         final var knownCoord = rover.marsView().knownTerrain().keySet();
@@ -245,6 +260,10 @@ public class Mars {
     public Set<Coordinates> knownArea() {
         return rovers().stream().map(r -> r.marsView().knownTerrain().keySet()).flatMap(Set::stream)
                 .collect(Collectors.toSet());
+    }
+
+    public Base base() {
+        return base;
     }
 
     @Override
