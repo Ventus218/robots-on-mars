@@ -1,6 +1,6 @@
 package src.model;
 
-public interface Rover extends MarsViewExchanger {
+public interface Rover extends HasViewOfMars {
     public String name();
 
     public int battery();

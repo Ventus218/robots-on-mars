@@ -18,20 +18,4 @@ public class MarsView {
     public void updateView(Map<Coordinates, TerrainView.Known> update) {
         update.entrySet().stream().forEach(e -> view.put(e.getKey(), e.getValue()));
     }
-
-    public void merge(MarsView other) {
-        other.knownTerrain().forEach((coord, t) -> {
-            switch (this.view.get(coord)) {
-                case TerrainView.Unknown():
-                    this.view.put(coord, t);
-                    break;
-                case TerrainView.Known(var myTerrain, var timestamp):
-                    // Updating my view if other has fresher information
-                    if (timestamp.before(t.timestamp())) {
-                        this.view.put(coord, t);
-                    }
-                    break;
-            }
-        });
-    }
 }

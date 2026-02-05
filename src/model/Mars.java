@@ -179,18 +179,9 @@ public class Mars {
         return result;
     }
 
-    private void updateRoverView(Rover rover) {
-        final var date = new Date();
-        final var view = cameraRangeOf(rover).stream()
-                .collect(Collectors.toMap(c -> c, c -> new TerrainView.Known(terrainAt(c), date)));
-        rover.marsView().updateView(view);
-    }
-
     synchronized public void performAction(Action action) {
         switch (action) {
             case Action.Move(var r, var dir) -> moveRover(r, dir);
-            case Action.MapMars(var r) -> updateRoverView(r);
-            case Action.ExchangeKnowledge(var r, var other) -> r.exchangeMarsView(other);
             default -> {
             }
         }

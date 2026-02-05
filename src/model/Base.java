@@ -1,15 +1,14 @@
 package src.model;
 
-public class Base implements MarsViewExchanger {
+public class Base implements HasViewOfMars {
 
-    private final MarsViewExchangerImpl marsViewExchanger;
+    private final MarsView marsView = new MarsView();
     private final int bound;
     private final int antennaRange;
 
     public Base(int squareSide, int antennaRange) {
         this.bound = Math.abs(squareSide) / 2;
         this.antennaRange = antennaRange;
-        this.marsViewExchanger = new MarsViewExchangerImpl(new MarsView());
     }
 
     public int antennaRange() {
@@ -30,11 +29,6 @@ public class Base implements MarsViewExchanger {
 
     @Override
     public MarsView marsView() {
-        return this.marsViewExchanger.marsView();
-    }
-
-    @Override
-    public void exchangeMarsView(MarsViewExchanger other) {
-        this.marsViewExchanger.exchangeMarsView(other);
+        return this.marsView;
     }
 }
