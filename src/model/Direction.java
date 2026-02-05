@@ -3,34 +3,40 @@ package src.model;
 import java.util.Random;
 import java.util.Set;
 
+import src.utils.V2D;
+
 public sealed interface Direction
         permits Direction.Up, Direction.Down, Direction.Left, Direction.Right {
 
+    public V2D toVector();
+
     record Up() implements Direction {
-        public Coordinates applyTo(Coordinates coordinates) {
-            return new Coordinates(coordinates.x(), coordinates.y() + 1);
+        @Override
+        public V2D toVector() {
+            return new V2D(0, 1);
         }
     }
 
     record Down() implements Direction {
-        public Coordinates applyTo(Coordinates coordinates) {
-            return new Coordinates(coordinates.x(), coordinates.y() - 1);
+        @Override
+        public V2D toVector() {
+            return new V2D(0, -1);
         }
     }
 
     record Left() implements Direction {
-        public Coordinates applyTo(Coordinates coordinates) {
-            return new Coordinates(coordinates.x() - 1, coordinates.y());
+        @Override
+        public V2D toVector() {
+            return new V2D(-1, 0);
         }
     }
 
     record Right() implements Direction {
-        public Coordinates applyTo(Coordinates coordinates) {
-            return new Coordinates(coordinates.x() + 1, coordinates.y());
+        @Override
+        public V2D toVector() {
+            return new V2D(1, 0);
         }
     }
-
-    public Coordinates applyTo(Coordinates coordinates);
 
     public static Set<Direction> all() {
         return Set.of(new Up(), new Down(), new Left(), new Right());

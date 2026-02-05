@@ -1,22 +1,32 @@
 package src.model;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
+import src.utils.V2D;
 
 public record Coordinates(int x, int y) {
     public double distanceTo(Coordinates coordinates) {
-        return Math.sqrt(Math.pow(x - coordinates.x(), 2) + Math.pow(y - coordinates.y(), 2));
+        return toVector().distanceTo(coordinates.toVector());
     }
 
-    public Direction directionTowards(Coordinates coordinates) {
-        return directionsTowards(coordinates).getFirst();
+    public Coordinates plus(Coordinates coordinates) {
+        return new Coordinates(x + coordinates.x(), y + coordinates.y());
     }
 
-    public List<Direction> directionsTowards(Coordinates coordinates) {
-        return Direction.all().stream()
-                .sorted(Comparator.comparingDouble(d -> d.applyTo(this).distanceTo(coordinates)))
-                .toList();
+    public Coordinates minus(Coordinates coordinates) {
+        return new Coordinates(x - coordinates.x(), y - coordinates.y());
+    }
+
+    public Coordinates apply(Direction dir) {
+        return switch (dir) {
+            case Direction.Up() -> plus(new Coordinates(0, 1));
+            case Direction.Down() -> plus(new Coordinates(0, -1));
+            case Direction.Right() -> plus(new Coordinates(1, 0));
+            case Direction.Left() -> plus(new Coordinates(-1, 0));
+        };
+    }
+
+    public V2D toVector() {
+        return new V2D(x, y);
     }
 
     public Set<Coordinates> neighbours() {

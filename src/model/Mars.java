@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import src.utils.MapWithDefault;
 import src.utils.Tuple;
+import src.utils.V2D;
 
 public class Mars {
 
@@ -98,8 +99,7 @@ public class Mars {
     }
 
     public Terrain terrainAt(Coordinates coordinates) {
-        assert Math.abs(coordinates.x()) <= positiveBound();
-        assert Math.abs(coordinates.y()) <= positiveBound();
+        assert isInsideBounds(coordinates);
         return terrain.get(coordinates);
     }
 
@@ -118,9 +118,8 @@ public class Mars {
 
     private void moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
-        final var newCoordinates = motion.applyTo(coordinates);
-        if (Math.abs(newCoordinates.x()) <= positiveBound() && Math.abs(newCoordinates.y()) <= positiveBound()
-                && canBeMovedOn(newCoordinates)) {
+        final var newCoordinates = coordinates.apply(motion);
+        if (canBeMovedOn(newCoordinates)) {
             roverCoordinates.put(rover, newCoordinates);
             updateRoverView(rover); // TODO: remove from here
         }
@@ -130,24 +129,31 @@ public class Mars {
         final var roverCoord = roverCoordinates.get(rover);
         final var knownCoord = rover.marsView().knownTerrain().keySet();
         final Function<Coordinates, Boolean> isBorder = coord -> coord.neighbours().stream()
+                .filter(n -> isInsideBounds(n))
                 .map(c -> knownCoord.contains(c))
                 .anyMatch(hasKnownNeighbour -> hasKnownNeighbour);
 
         final var unknownCoord = allCoordinates().stream()
                 .filter(c -> !knownCoord.contains(c) && isBorder.apply(c))
-                .sorted(Comparator.comparingDouble(c -> c.distanceTo(roverCoord)))
                 .toList();
 
-        final var target = unknownCoord.stream()
+        final var vector = unknownCoord.stream()
                 .map(c -> {
-                    final var nearToRover = 1 / c.distanceTo(roverCoord);
-                    final var nearToBase = 1 / c.distanceTo(baseCenter);
-                    final var value = 0.9 * nearToRover + 0.1 * nearToBase;
-                    return Tuple.of(c, value);
+                    final double nearToRover = 1 / (c.distanceTo(roverCoord) - rover.cameraRange());
+                    // final double nearToBase = 1 / c.distanceTo(baseCenter);
+                    // final double k = 0.4;
+                    // final double weight = (1 - k) * nearToRover + k * nearToBase;
+                    final double weight = nearToRover;
+                    final var versor = c.minus(roverCoord).toVector().versor();
+                    return versor.mult(weight);
                 })
-                .sorted(Comparator.<Tuple<Coordinates, Double>>comparingDouble(t -> t._2()).reversed())
-                .findFirst().get()._1();
-        return roverCoord.directionsTowards(target).stream().filter(d -> canBeMovedOn(d.applyTo(roverCoord))).toList();
+                .collect(Collectors.reducing(new V2D(0, 0), (v1, v2) -> v1.plus(v2)));
+
+        return availableDirections(rover).stream()
+                .map(d -> Tuple.of(d, d.toVector().dot(vector)))
+                .sorted(Comparator.<Tuple<Direction, Double>>comparingDouble(t -> t._2()).reversed())
+                .map(t -> t._1())
+                .toList();
     }
 
     private Set<Coordinates> allCoordinates() {
@@ -197,8 +203,9 @@ public class Mars {
             for (int y = coordinates.y() - radius; y <= coordinates.y() + radius; y++) {
                 int dx = x - coordinates.x();
                 int dy = y - coordinates.y();
-                if (dx * dx + dy * dy <= r2) {
-                    result.add(new Coordinates(x, y));
+                final var c = new Coordinates(x, y);
+                if (dx * dx + dy * dy <= r2 && isInsideBounds(c)) {
+                    result.add(c);
                 }
             }
         }
@@ -207,7 +214,7 @@ public class Mars {
 
     public Set<Direction> availableDirections(Rover r) {
         return Direction.all().stream()
-                .filter(d -> canBeMovedOn(d.applyTo(roverCoordinates.get(r))))
+                .filter(d -> canBeMovedOn(roverCoordinates.get(r).apply(d)))
                 .collect(Collectors.toSet());
     }
 
@@ -216,12 +223,15 @@ public class Mars {
             case Terrain.Obstacle() -> false;
             case Terrain.MiningSpot(var mined) -> false;
             default -> true;
-        } && roverAtCoordinates(coordinates).isEmpty() && Math.abs(coordinates.x()) <= positiveBound()
-                && Math.abs(coordinates.y()) <= positiveBound();
+        } && roverAtCoordinates(coordinates).isEmpty() && isInsideBounds(coordinates);
     }
 
     public Set<Coordinates> cameraRangeOf(Rover r) {
         return radiusOver(roverCoordinates.get(r), r.cameraRange());
+    }
+
+    public boolean isInsideBounds(Coordinates coordinates) {
+        return Math.abs(coordinates.x()) <= positiveBound() && Math.abs(coordinates.y()) <= positiveBound();
     }
 
     public Set<Coordinates> antennaRangeOf(Rover r) {
