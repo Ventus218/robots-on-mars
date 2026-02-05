@@ -42,7 +42,7 @@ public class Mars {
         }
 
         placeWithDensity(new Terrain.Obstacle(), obstaclesDensity);
-        placeWithDensity(new Terrain.MiningSpot(false), miningSpotsDensity);
+        placeWithDensity(new Terrain.MiningSpot(), miningSpotsDensity);
         placeWithDensity(new Terrain.Sample(), samplesDensity);
     }
 
@@ -226,7 +226,7 @@ public class Mars {
     private boolean canBeMovedOn(Coordinates coordinates) {
         return switch (terrainAt(coordinates)) {
             case Terrain.Obstacle() -> false;
-            case Terrain.MiningSpot(var mined) -> false;
+            case Terrain.MiningSpot() -> false;
             default -> true;
         } && roverAtCoordinates(coordinates).isEmpty() && isInsideBounds(coordinates);
     }
@@ -266,7 +266,7 @@ public class Mars {
                     case Terrain.Empty() -> "-";
                     case Terrain.Obstacle() -> "O";
                     case Terrain.Sample() -> "S";
-                    case Terrain.MiningSpot(var mined) -> "X";
+                    case Terrain.MiningSpot() -> "X";
                     case Terrain.Base() -> "B";
                 };
                 if (roverAtCoordinates(coordinates).isPresent()) {

@@ -14,7 +14,6 @@ class GridPanel extends JPanel implements Mars.Listener {
     private final Mars model;
     private final int cellSize;
     private final Image miningSpotImg;
-    private final Image minedSpotImg;
     private final Image sampleImg;
     private final Image obstacleImg;
     private final Color terrainColor = new Color(243, 147, 107);
@@ -25,7 +24,6 @@ class GridPanel extends JPanel implements Mars.Listener {
         this.model = model;
         this.cellSize = cellSize;
         miningSpotImg = ImageIO.read(getClass().getResource("/mining_spot.png"));
-        minedSpotImg = ImageIO.read(getClass().getResource("/mined_spot.png"));
         sampleImg = ImageIO.read(getClass().getResource("/sample.png"));
         obstacleImg = ImageIO.read(getClass().getResource("/obstacle.png"));
 
@@ -63,13 +61,7 @@ class GridPanel extends JPanel implements Mars.Listener {
                         case Terrain.Empty() -> {
                         }
                         case Terrain.Sample() -> cellData.image = sampleImg;
-                        case Terrain.MiningSpot(var mined) -> {
-                            if (mined) {
-                                cellData.image = minedSpotImg;
-                            } else {
-                                cellData.image = miningSpotImg;
-                            }
-                        }
+                        case Terrain.MiningSpot() -> cellData.image = miningSpotImg;
                     }
                     if (model.roverAtCoordinates(coordinates).isPresent()) {
                         cellData.text = "R";

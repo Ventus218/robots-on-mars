@@ -9,7 +9,7 @@ public sealed interface Terrain
     record Obstacle() implements Terrain {
     }
 
-    record MiningSpot(Boolean mined) implements Terrain {
+    record MiningSpot() implements Terrain {
     }
 
     record Sample() implements Terrain {
