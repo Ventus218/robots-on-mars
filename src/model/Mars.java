@@ -55,7 +55,6 @@ public class Mars {
             if (!roverAtCoordinates(coordinates).isPresent()) {
                 roverCoordinates.put(r, coordinates);
                 placed = true;
-                updateRoverView(r);
                 informListeners();
             }
         }
@@ -121,7 +120,6 @@ public class Mars {
         final var newCoordinates = coordinates.apply(motion);
         if (canBeMovedOn(newCoordinates)) {
             roverCoordinates.put(rover, newCoordinates);
-            updateRoverView(rover); // TODO: remove from here
         }
     }
 
@@ -182,8 +180,9 @@ public class Mars {
     }
 
     private void updateRoverView(Rover rover) {
+        final var date = new Date();
         final var view = cameraRangeOf(rover).stream()
-                .collect(Collectors.toMap(c -> c, c -> new TerrainView.Known(terrainAt(c), new Date())));
+                .collect(Collectors.toMap(c -> c, c -> new TerrainView.Known(terrainAt(c), date)));
         rover.marsView().updateView(view);
     }
 
