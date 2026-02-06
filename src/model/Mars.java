@@ -123,14 +123,20 @@ public class Mars {
         }
     }
 
-    public List<Rover> reachableRovers(Rover rover) {
-        final var roverCoord = roverCoordinates.get(rover);
-        return roverCoordinates.entrySet().stream()
-                .filter(e -> e.getKey() != rover)
-                .filter(e -> e.getValue().distanceTo(roverCoord) <= rover.antennaRange())
+    synchronized public List<Rover> reachableRovers(HasViewOfMars h) {
+        final var coordAndRange = switch (h) {
+            case Base b -> Tuple.of(baseCenter, b.antennaRange());
+            case SimpleRover r -> Tuple.of(roverCoordinates.get(h), r.antennaRange());
+            default -> throw new IllegalArgumentException();
+        };
+        final var myCoord = coordAndRange._1();
+        final var myRange = coordAndRange._2();
+        final var reachableRovers = roverCoordinates.entrySet().stream()
+                .filter(e -> e.getKey() != h)
+                .filter(e -> e.getValue().distanceTo(myCoord) <= myRange)
                 .map(e -> e.getKey())
                 .toList();
-
+        return reachableRovers;
     }
 
     public boolean canReachBase(Rover rover) {
@@ -138,7 +144,7 @@ public class Mars {
         return roverCoord.distanceTo(baseCenter) <= rover.antennaRange();
     }
 
-    public List<Direction> bestExploreDirections(Rover rover) {
+    synchronized public List<Direction> bestExploreDirections(Rover rover) {
         final var roverCoord = roverCoordinates.get(rover);
         final var knownCoord = rover.marsView().knownTerrain().keySet();
         final Function<Coordinates, Boolean> isBorder = coord -> coord.neighbours().stream()
@@ -252,8 +258,8 @@ public class Mars {
                 .collect(Collectors.toSet());
     }
 
-    synchronized public void roverBelievesCell(Rover r, Coordinates c, Terrain t) {
-        r.marsView().updateView(Map.of(c, new TerrainView.Known(t)));
+    synchronized public void updateMarsViewOf(HasViewOfMars h, Coordinates c, Terrain t) {
+        h.marsView().updateView(Map.of(c, new TerrainView.Known(t)));
         informListeners();
     }
 

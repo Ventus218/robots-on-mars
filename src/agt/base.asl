@@ -1,21 +1,8 @@
-// Agent alice in project robotsOnMars
-
 /* Initial beliefs and rules */
 
 /* Initial goals */
 
-!explore.
-
 /* Plans */
-
-+!explore <- 
-    exploreAction;
-    .wait(200);
-    !!explore.
-
-+see(coord(X, Y), Terrain) <-
-    -cell(coord(X, Y), _);
-    +cell(coord(X, Y), Terrain, system.time).
 
 +inRange(R) <-
     .print("Sending knowledge to ", R);
