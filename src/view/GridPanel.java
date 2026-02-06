@@ -16,6 +16,9 @@ class GridPanel extends JPanel implements Mars.Listener {
     private final Image miningSpotImg;
     private final Image sampleImg;
     private final Image obstacleImg;
+    private final Image baseImg;
+    private final Image simpleRoverImg;
+    private final Image scientistRoverImg;
     private final Color terrainColor = new Color(243, 147, 107);
 
     private final Map<Coordinates, CellData> cells = new HashMap<>();
@@ -26,6 +29,9 @@ class GridPanel extends JPanel implements Mars.Listener {
         miningSpotImg = ImageIO.read(getClass().getResource("/mining_spot.png"));
         sampleImg = ImageIO.read(getClass().getResource("/sample.png"));
         obstacleImg = ImageIO.read(getClass().getResource("/obstacle.png"));
+        baseImg = ImageIO.read(getClass().getResource("/base.png"));
+        simpleRoverImg = ImageIO.read(getClass().getResource("/simple_rover.png"));
+        scientistRoverImg = ImageIO.read(getClass().getResource("/scientist_rover.png"));
 
         int size = model.side() * cellSize;
         setPreferredSize(new Dimension(size, size));
@@ -49,23 +55,28 @@ class GridPanel extends JPanel implements Mars.Listener {
             for (var y = model.negativeBound(); y <= model.positiveBound(); y++) {
                 final var coordinates = new Coordinates(x, y);
                 final var terrain = model.terrainAt(new Coordinates(x, y));
-                final var cellData = new CellData(Color.GRAY, "", null);
+                final var cellData = new CellData(Color.GRAY, "", null, null);
                 if (knownArea.contains(coordinates)) {
                     cellData.color = terrainColor;
-                    if (areaCoveredByAntennas.contains(coordinates)) {
-                        cellData.color = Color.CYAN;
-                    }
                     switch (terrain) {
-                        case Terrain.Base() -> cellData.color = Color.BLUE;
+                        case Terrain.Base() -> cellData.image = baseImg;
                         case Terrain.Obstacle() -> cellData.image = obstacleImg;
-                        case Terrain.Empty() -> {
-                        }
                         case Terrain.Sample() -> cellData.image = sampleImg;
                         case Terrain.MiningSpot() -> cellData.image = miningSpotImg;
+                        case Terrain.Empty() -> {
+                        }
                     }
-                    if (model.roverAtCoordinates(coordinates).isPresent()) {
-                        cellData.text = "R";
+                }
+                final var rover = model.roverAtCoordinates(coordinates);
+                if (rover.isPresent()) {
+                    if (rover.get() instanceof SimpleRover) {
+                        cellData.image = simpleRoverImg;
+                    } else {
+                        cellData.image = scientistRoverImg;
                     }
+                }
+                if (areaCoveredByAntennas.contains(coordinates)) {
+                    cellData.overlay = new Color(0.26f, 0.7f, 0.95f, 0.2f);
                 }
                 setCell(coordinates, cellData);
             }
@@ -105,6 +116,11 @@ class GridPanel extends JPanel implements Mars.Listener {
             if (data.image != null) {
                 g2.drawImage(data.image, x, y, cellSize, cellSize, null);
             }
+            // Fill color
+            if (data.overlay != null) {
+                g2.setColor(data.overlay);
+                g2.fillRect(x, y, cellSize, cellSize);
+            }
 
             // Draw text
             if (data.text != null && !data.text.isEmpty()) {
@@ -121,11 +137,13 @@ class GridPanel extends JPanel implements Mars.Listener {
         Color color;
         String text;
         Image image;
+        Color overlay;
 
-        CellData(Color color, String text, Image image) {
+        CellData(Color color, String text, Image image, Color overlay) {
             this.color = color;
             this.text = text;
             this.image = image;
+            this.overlay = overlay;
         }
     }
 }
