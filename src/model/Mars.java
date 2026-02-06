@@ -103,11 +103,11 @@ public class Mars {
     }
 
     public Set<Rover> rovers() {
-        return Collections.unmodifiableSet(roverCoordinates.keySet());
+        return roverCoordinates().keySet();
     }
 
     public Optional<Rover> roverAtCoordinates(Coordinates coordinates) {
-        return roverCoordinates.entrySet().stream().filter(e -> e.getValue().equals(coordinates)).map(e -> e.getKey())
+        return roverCoordinates().entrySet().stream().filter(e -> e.getValue().equals(coordinates)).map(e -> e.getKey())
                 .findFirst();
     }
 
@@ -115,7 +115,7 @@ public class Mars {
         return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
     }
 
-    private void moveRover(Rover rover, Direction motion) {
+    synchronized private void moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
         final var newCoordinates = coordinates.apply(motion);
         if (canBeMovedOn(newCoordinates)) {
@@ -126,12 +126,12 @@ public class Mars {
     synchronized public List<Rover> reachableRovers(HasViewOfMars h) {
         final var coordAndRange = switch (h) {
             case Base b -> Tuple.of(baseCenter, b.antennaRange());
-            case SimpleRover r -> Tuple.of(roverCoordinates.get(h), r.antennaRange());
+            case Rover r -> Tuple.of(roverCoordinates().get(h), r.antennaRange());
             default -> throw new IllegalArgumentException();
         };
         final var myCoord = coordAndRange._1();
         final var myRange = coordAndRange._2();
-        final var reachableRovers = roverCoordinates.entrySet().stream()
+        final var reachableRovers = roverCoordinates().entrySet().stream()
                 .filter(e -> e.getKey() != h)
                 .filter(e -> e.getValue().distanceTo(myCoord) <= myRange)
                 .map(e -> e.getKey())
@@ -140,12 +140,12 @@ public class Mars {
     }
 
     public boolean canReachBase(Rover rover) {
-        final var roverCoord = roverCoordinates.get(rover);
+        final var roverCoord = roverCoordinates().get(rover);
         return roverCoord.distanceTo(baseCenter) <= rover.antennaRange();
     }
 
     synchronized public List<Direction> bestExploreDirections(Rover rover) {
-        final var roverCoord = roverCoordinates.get(rover);
+        final var roverCoord = roverCoordinates().get(rover);
         final var knownCoord = rover.marsView().knownTerrain().keySet();
         final Function<Coordinates, Boolean> isBorder = coord -> coord.neighbours().stream()
                 .filter(n -> isInsideBounds(n))
@@ -225,7 +225,7 @@ public class Mars {
 
     public Set<Direction> availableDirections(Rover r) {
         return Direction.all().stream()
-                .filter(d -> canBeMovedOn(roverCoordinates.get(r).apply(d)))
+                .filter(d -> canBeMovedOn(roverCoordinates().get(r).apply(d)))
                 .collect(Collectors.toSet());
     }
 
@@ -238,7 +238,7 @@ public class Mars {
     }
 
     public Set<Coordinates> cameraRangeOf(Rover r) {
-        return radiusOver(roverCoordinates.get(r), r.cameraRange());
+        return radiusOver(roverCoordinates().get(r), r.cameraRange());
     }
 
     public boolean isInsideBounds(Coordinates coordinates) {
@@ -246,7 +246,7 @@ public class Mars {
     }
 
     public Set<Coordinates> antennaRangeOf(Rover r) {
-        return radiusOver(roverCoordinates.get(r), r.antennaRange());
+        return radiusOver(roverCoordinates().get(r), r.antennaRange());
     }
 
     public Set<Coordinates> antennaRangeOfBase() {
@@ -261,6 +261,10 @@ public class Mars {
     synchronized public void updateMarsViewOf(HasViewOfMars h, Coordinates c, Terrain t) {
         h.marsView().updateView(Map.of(c, new TerrainView.Known(t)));
         informListeners();
+    }
+
+    public Map<Rover, Coordinates> roverCoordinates() {
+        return Map.copyOf(roverCoordinates);
     }
 
     public Base base() {
