@@ -15,7 +15,7 @@
 -!explore <- .print("failed explore").
 
 +see(coord(X, Y), Terrain) <-
-    -cell(coord(X, Y), _);
+    -cell(coord(X, Y), _, _);
     +cell(coord(X, Y), Terrain, system.time).
 
 +inRange(R) <-
