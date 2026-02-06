@@ -3,9 +3,12 @@ package src.model;
 public class ScientistRover implements Rover {
 
     private final SimpleRover rover;
+    private final int carriedSamples = 0;
+    private final int samplesCapacity;
 
-    public ScientistRover(String name, int battery, int cameraRange, int antennaRange) {
+    public ScientistRover(String name, int battery, int cameraRange, int antennaRange, int samplesCapacity) {
         this.rover = new SimpleRover(name, battery, cameraRange, antennaRange);
+        this.samplesCapacity = samplesCapacity;
     }
 
     @Override
@@ -32,4 +35,13 @@ public class ScientistRover implements Rover {
     public MarsView marsView() {
         return this.rover.marsView();
     }
+
+    public int carriedSamples() {
+        return carriedSamples;
+    }
+
+    public int samplesCapacity() {
+        return samplesCapacity;
+    }
+
 }
