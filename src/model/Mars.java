@@ -253,7 +253,7 @@ public class Mars {
         return radiusOver(baseCenter, base.antennaRange());
     }
 
-    public Set<Coordinates> knownArea() {
+    synchronized public Set<Coordinates> knownArea() {
         return rovers().stream().map(r -> r.marsView().knownTerrain().keySet()).flatMap(Set::stream)
                 .collect(Collectors.toSet());
     }
