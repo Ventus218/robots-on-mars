@@ -21,9 +21,7 @@
 +inRange(R) <-
     .print("Sending knowledge to ", R);
     .findall(cell(coord(X, Y), Terrain, TS), cell(coord(X, Y), Terrain, TS), Cells);
-    .send(R, tell, marsViewReceived(Cells)).
-
-+marsViewReceived(Cells) <- !mergeMarsView(Cells).
+    .send(R, achieve, mergeMarsView(Cells)).
 
 +!mergeMarsView([]).
 +!mergeMarsView([Cell | Tail]) <-
