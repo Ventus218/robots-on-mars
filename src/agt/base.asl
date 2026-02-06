@@ -6,12 +6,21 @@
 
 +inRange(R) <-
     .print("Sending knowledge to ", R);
-    for (cell(coord(X, Y), Terrain, Timestamp)){
-        .send(R, tell, receivedCell(coord(X, Y), Terrain, Timestamp));
-    }.
+    .findall(cell(coord(X, Y), Terrain, TS), cell(coord(X, Y), Terrain, TS), Cells);
+    .send(R, tell, marsViewReceived(Cells)).
 
-+receivedCell(coord(X, Y), Terrain, Timestamp) : cell(coord(X, Y), _, Timestamp2) & Timestamp > Timestamp2 <-
-    -+cell(coord(X, Y), Terrain, Timestamp).
++marsViewReceived(Cells) <- !mergeMarsView(Cells).
 
-+receivedCell(coord(X, Y), Terrain, Timestamp) : not(cell(coord(X, Y), _, _)) <-
-    -+cell(coord(X, Y), Terrain, Timestamp).
++!mergeMarsView([]).
++!mergeMarsView([Cell | Tail]) <-
+    !updateCellIfNewer(Cell);
+    !mergeMarsView(Tail).
+-!mergeMarsView <- .print("failed mergeMarsView").
+
+// If i have newer data about that cell i will do nothing.
++!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
+// Otherwise i will update my knowledge about that cell.
++!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
+    -cell(coord(X, Y), _, _);
+    +cell(coord(X, Y), Terrain, Timestamp).
+-!updateCellIfNewer <- .print("failed updateCellIfNewer").
