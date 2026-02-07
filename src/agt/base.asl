@@ -1,5 +1,21 @@
 /* Initial beliefs and rules */
 
+// Think about this as a belief, it's just a way to initialize it as soon as it's needed.
++!cellMap(M) : cellMapInstance(M).
+@[atomic]
++!cellMap(M) <-
+    .map.create(M);
+    +cellMapInstance(M).
+
++!saveCell(Coord, Terrain, Timestamp) <-
+    !cellMap(M);
+    // Here there's a difference wrt rover.asl
+    .map.put(M, Coord, data(Terrain, Timestamp)).
+
+cell(Coord, Terrain, Timestamp) :-
+    cellMapInstance(M) &
+    .map.get(M, Coord, data(Terrain, Timestamp)).
+
 /* Initial goals */
 
 /* Plans */
@@ -11,7 +27,6 @@
 // If i'm in range with R i will send him knowledge and reschedule sendKnowledge
 // in case we keep staying in range for some time.
 +!sendKnowledge(R) : inRange(R) <-
-    .print("Sending knowledge to ", R);
     .findall(cell(coord(X, Y), Terrain, TS), cell(coord(X, Y), Terrain, TS), Cells);
     .send(R, achieve, mergeMarsView(Cells));
     // Reschedule plan
@@ -30,6 +45,5 @@
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
 // Otherwise i will update my knowledge about that cell.
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
-    -cell(coord(X, Y), _, _);
-    +cell(coord(X, Y), Terrain, Timestamp).
+    !saveCell(coord(X, Y), Terrain, Timestamp).
 -!updateCellIfNewer <- .print("failed updateCellIfNewer").

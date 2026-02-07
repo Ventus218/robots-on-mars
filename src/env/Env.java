@@ -73,7 +73,11 @@ public class Env extends Environment {
         assert !agName.equals("base");
         final var rover = spawnIfMissing(agName);
         Optional<Action> actionToPerform = Optional.empty();
-        if (action.equals(Lit.exploreAction)) {
+        if (action.getFunctor().equals(Lit.saveCellAction.getFunctor())) {
+            final var coord = Lit.toCoordinates(action.getTerm(0));
+            final var terrain = Lit.toTerrain(action.getTerm(1));
+            mars.updateMarsViewOf(rover, coord, terrain);
+        } else if (action.equals(Lit.exploreAction)) {
             final var direction = mars.bestExploreDirections(rover).stream()
                     .findFirst()
                     .orElse(Direction.random());
@@ -163,6 +167,7 @@ public class Env extends Environment {
         public static final Literal exploreAction = ASSyntax.createLiteral("exploreAction");
         public static final Literal moveAction = ASSyntax.createLiteral("move");
         public static final Literal rechargeAction = ASSyntax.createLiteral("recharge");
+        public static final Literal saveCellAction = ASSyntax.createLiteral("saveCellAction");
         public static final Literal up = ASSyntax.createAtom("up");
         public static final Literal down = ASSyntax.createAtom("down");
         public static final Literal left = ASSyntax.createAtom("left");

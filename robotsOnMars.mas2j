@@ -15,11 +15,13 @@ MAS robotsOnMars {
     environment: src.env.Env(10)
 
     agents: 
-        base base agentClass src.agt.HasViewOfMarsAgent;
+        base base;
 
-        tony rover agentClass src.agt.HasViewOfMarsAgent;
-        bill rover agentClass src.agt.HasViewOfMarsAgent;
-        sus rover agentClass src.agt.HasViewOfMarsAgent;
+        tony rover;
+        bill rover;
+        sos rover;
+        siasdf rover;
+        frank rover;
 
     aslSourcePath: "src/agt";
 }

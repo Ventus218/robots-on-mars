@@ -4,11 +4,30 @@
 movementSpeedMs(200).
 rechargeSpeedMs(2000).
 
+// Think about this as a belief, it's just a way to initialize it as soon as it's needed.
++!cellMap(M) : cellMapInstance(M).
+@[atomic]
++!cellMap(M) <-
+    .map.create(M);
+    +cellMapInstance(M).
+
++!saveCell(Coord, Terrain, Timestamp) <-
+    !cellMap(M);
+    saveCellAction(Coord, Terrain, Timestamp);
+    .map.put(M, Coord, data(Terrain, Timestamp)).
+
+cell(Coord, Terrain, Timestamp) :-
+    cellMapInstance(M) &
+    .map.get(M, Coord, data(Terrain, Timestamp)).
+
 /* Initial goals */
 
-!start.
+!init.
 
 /* Plans */
+
++!init <-
+    !!start.
 
 +!start <- 
     !!explore.
@@ -20,9 +39,8 @@ rechargeSpeedMs(2000).
     !!explore.
 -!explore <- .print("failed explore").
 
-+see(coord(X, Y), Terrain) <-
-    -cell(coord(X, Y), _, _);
-    +cell(coord(X, Y), Terrain, system.time).
++see(C, Terrain) <-
+    !saveCell(C, Terrain, system.time).
 
 // >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
 // Estimating the amount of energy needed to go back to the base plus a safety energy reserve.
@@ -55,7 +73,6 @@ rechargeSpeedMs(2000).
 // If i'm in range with R i will send him knowledge and reschedule sendKnowledge
 // in case we keep staying in range for some time.
 +!sendKnowledge(R) : inRange(R) <-
-    .print("Sending knowledge to ", R);
     .findall(cell(coord(X, Y), Terrain, TS), cell(coord(X, Y), Terrain, TS), Cells);
     .send(R, achieve, mergeMarsView(Cells));
     // Reschedule plan
@@ -74,8 +91,7 @@ rechargeSpeedMs(2000).
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
 // Otherwise i will update my knowledge about that cell.
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
-    -cell(coord(X, Y), _, _);
-    +cell(coord(X, Y), Terrain, Timestamp).
+    !saveCell(coord(X, Y), Terrain, Timestamp).
 -!updateCellIfNewer <- .print("failed updateCellIfNewer").
 
 // >>>>>>>>>> UTILITIES SECTION <<<<<<<<<<
@@ -104,7 +120,7 @@ inBase :- selfCoord(Pos) & cell(Pos, base, _).
     .min(AvailableDirs, tuple(_, Dir));
     ?movementSpeedMs(S);
     .wait(S);
-    move(Dir).
+    !safeMove(Dir).
 
 +!safeMove(Dir) <- move(Dir).
 -!safeMove(Dir).
