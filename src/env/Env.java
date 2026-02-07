@@ -81,6 +81,9 @@ public class Env extends Environment {
                     .findFirst()
                     .orElse(Direction.random());
             actionToPerform = Optional.of(new Action.Move(rover, direction));
+        } else if (action.getFunctor().equals(Lit.moveAction.getFunctor())) {
+            final var direction = Lit.toDirection(action.getTerm(0));
+            actionToPerform = Optional.of(new Action.Move(rover, direction));
         } else {
             logger.info("executing: " + action + ", but not implemented!");
         }
@@ -99,6 +102,7 @@ public class Env extends Environment {
             percepts.addAll(mars.reachableRovers(mars.base()).stream().map(Rover::name).map(Lit::toInRange).toList());
         } else {
             final var rover = spawnIfMissing(agName);
+            final var roverCoord = mars.roverCoordinates().get(rover);
 
             final var cameraPercepts = mars.cameraRangeOf(rover).stream()
                     .map(coord -> {
@@ -111,15 +115,19 @@ public class Env extends Environment {
                         };
                         return ASSyntax.createLiteral(
                                 "see",
-                                ASSyntax.createLiteral("coord",
-                                        ASSyntax.createNumber(coord.x()),
-                                        ASSyntax.createNumber(coord.y())),
+                                Lit.fromCoordinates(coord),
                                 terrainLiteral);
                     })
                     .toList();
             percepts.addAll(cameraPercepts);
 
             percepts.add(ASSyntax.createLiteral("battery", ASSyntax.createNumber(rover.battery())));
+
+            final var distanceFromBase = roverCoord.distanceTo(mars.baseCenterCoordinates());
+            percepts.add(ASSyntax.createLiteral("distanceFromBase", ASSyntax.createNumber(distanceFromBase)));
+
+            percepts.add(ASSyntax.createLiteral("selfCoord", Lit.fromCoordinates(roverCoord)));
+            percepts.add(ASSyntax.createLiteral("baseCoord", Lit.fromCoordinates(mars.baseCenterCoordinates())));
 
             percepts.addAll(mars.reachableRovers(rover).stream().map(Rover::name).map(Lit::toInRange).toList());
             if (mars.canReachBase(rover)) {
@@ -146,14 +154,11 @@ public class Env extends Environment {
     // Group literals
     public static class Lit {
         public static final Literal exploreAction = ASSyntax.createLiteral("exploreAction");
-        // public static final Literal canMoveUp =
-        // ASSyntax.createLiteral("canMove(up)");
-        // public static final Literal canMoveDown =
-        // ASSyntax.createLiteral("canMove(down)");
-        // public static final Literal canMoveLeft =
-        // ASSyntax.createLiteral("canMove(left)");
-        // public static final Literal canMoveRight =
-        // ASSyntax.createLiteral("canMove(right)");
+        public static final Literal moveAction = ASSyntax.createLiteral("move");
+        public static final Literal up = ASSyntax.createAtom("up");
+        public static final Literal down = ASSyntax.createAtom("down");
+        public static final Literal left = ASSyntax.createAtom("left");
+        public static final Literal right = ASSyntax.createAtom("right");
 
         public static Literal fromBool(boolean b) {
             return b ? Literal.LTrue : Literal.LFalse;
@@ -172,6 +177,20 @@ public class Env extends Environment {
 
         public static Literal toInRange(String name) {
             return ASSyntax.createLiteral("inRange", ASSyntax.createLiteral(name));
+        }
+
+        public static Literal fromCoordinates(Coordinates coord) {
+            return ASSyntax.createLiteral("coord", ASSyntax.createNumber(coord.x()), ASSyntax.createNumber(coord.y()));
+        }
+
+        public static Direction toDirection(Term t) {
+            return switch (t.toString()) {
+                case "up" -> new Direction.Up();
+                case "down" -> new Direction.Down();
+                case "left" -> new Direction.Left();
+                case "right" -> new Direction.Right();
+                default -> throw new IllegalArgumentException(t.toString());
+            };
         }
 
         public static Coordinates toCoordinates(Term t) {

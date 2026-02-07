@@ -272,6 +272,10 @@ public class Mars {
         return base;
     }
 
+    synchronized public Coordinates baseCenterCoordinates() {
+        return baseCenter;
+    }
+
     @Override
     public String toString() {
         final var builder = new StringBuilder();

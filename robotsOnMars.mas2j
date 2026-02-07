@@ -18,7 +18,6 @@ MAS robotsOnMars {
         base base agentClass src.agt.HasViewOfMarsAgent;
 
         tony rover agentClass src.agt.HasViewOfMarsAgent;
-        bill rover agentClass src.agt.HasViewOfMarsAgent;
 
     aslSourcePath: "src/agt";
 }
