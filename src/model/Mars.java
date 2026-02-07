@@ -115,12 +115,15 @@ public class Mars {
         return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
     }
 
-    synchronized private void moveRover(Rover rover, Direction motion) {
+    synchronized private boolean moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
         final var newCoordinates = coordinates.apply(motion);
         if (canBeMovedOn(newCoordinates)) {
             roverCoordinates.put(rover, newCoordinates);
             rover.updateBatteryWith(-1);
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -186,13 +189,24 @@ public class Mars {
         return result;
     }
 
-    synchronized public void performAction(Action action) {
-        switch (action) {
+    synchronized public boolean performAction(Action action) {
+        final var res = switch (action) {
             case Action.Move(var r, var dir) -> moveRover(r, dir);
-            default -> {
-            }
-        }
+            case Action.Recharge(var r) -> updateRoverBattery(r);
+            default -> false;
+        };
         informListeners();
+        return res;
+    }
+
+    synchronized private boolean updateRoverBattery(Rover rover) {
+        final var roverCoord = roverCoordinates().get(rover);
+        if (terrainAt(roverCoord) instanceof Terrain.Base) {
+            rover.updateBatteryWith(10);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     synchronized private void informListeners() {

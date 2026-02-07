@@ -1,15 +1,12 @@
 package src.env;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
 
 import jason.NoValueException;
-// Environment code for project robotsOnMars
 import jason.asSyntax.*;
 import jason.asSyntax.parser.ParseException;
 import jason.environment.Environment;
@@ -84,15 +81,18 @@ public class Env extends Environment {
         } else if (action.getFunctor().equals(Lit.moveAction.getFunctor())) {
             final var direction = Lit.toDirection(action.getTerm(0));
             actionToPerform = Optional.of(new Action.Move(rover, direction));
+        } else if (action.getFunctor().equals(Lit.rechargeAction.getFunctor())) {
+            actionToPerform = Optional.of(new Action.Recharge(rover));
         } else {
             logger.info("executing: " + action + ", but not implemented!");
         }
 
-        actionToPerform.ifPresent(a -> {
-            mars.performAction(a);
-            informAgsEnvironmentChanged();
-        });
-        return true; // the action was executed with success
+        informAgsEnvironmentChanged();
+        return actionToPerform.stream()
+                .map(a -> mars.performAction(a))
+                .peek(r -> informAgsEnvironmentChanged())
+                .findFirst()
+                .orElse(true);
     }
 
     @Override
@@ -121,7 +121,14 @@ public class Env extends Environment {
                     .toList();
             percepts.addAll(cameraPercepts);
 
+            final var roversPercepts = mars.cameraRangeOf(rover).stream()
+                    .filter(coord -> mars.roverAtCoordinates(coord).isPresent())
+                    .map(coord -> ASSyntax.createLiteral("rover", Lit.fromCoordinates(coord)))
+                    .toList();
+            percepts.addAll(roversPercepts);
+
             percepts.add(ASSyntax.createLiteral("battery", ASSyntax.createNumber(rover.battery())));
+            percepts.add(ASSyntax.createLiteral("batteryCapacity", ASSyntax.createNumber(rover.batteryCapacity())));
 
             final var distanceFromBase = roverCoord.distanceTo(mars.baseCenterCoordinates());
             percepts.add(ASSyntax.createLiteral("distanceFromBase", ASSyntax.createNumber(distanceFromBase)));
@@ -155,6 +162,7 @@ public class Env extends Environment {
     public static class Lit {
         public static final Literal exploreAction = ASSyntax.createLiteral("exploreAction");
         public static final Literal moveAction = ASSyntax.createLiteral("move");
+        public static final Literal rechargeAction = ASSyntax.createLiteral("recharge");
         public static final Literal up = ASSyntax.createAtom("up");
         public static final Literal down = ASSyntax.createAtom("down");
         public static final Literal left = ASSyntax.createAtom("left");

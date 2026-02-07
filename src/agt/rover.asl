@@ -2,12 +2,16 @@
 
 /* Initial beliefs and rules */
 movementSpeedMs(200).
+rechargeSpeedMs(2000).
 
 /* Initial goals */
 
-!explore.
+!start.
 
 /* Plans */
+
++!start <- 
+    !!explore.
 
 +!explore <- 
     exploreAction;
@@ -21,22 +25,28 @@ movementSpeedMs(200).
     +cell(coord(X, Y), Terrain, system.time).
 
 // >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
-// Worst case scenario we have an isosceles right triangle where x is the leg 
-// And the rover will have to travel x*2 cells to reach the base
-// D = sqrt((x^2) * 2)
-// D^2 = (x^2) * 2
-// (D^2) / 2 = x^2
-// sqrt((D^2) / 2) = x
-+battery(B) : not(returningToBase) & distanceFromBase(D) & B <= (math.sqrt((D*D) / 2) * 2) + 10 <-
-    +returningToBase;
+// Estimating the amount of energy needed to go back to the base plus a safety energy reserve.
+// Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
+// having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
++battery(B) : not(batteryLow) & distanceFromBase(D) & B <= (math.sqrt((D*D) / 2) * 2) + 10 <-
+    +batteryLow;
     .drop_intention(explore);
-    .print("emergency, battery low and away from base");
-    !!returnToBase.
+    .print("Going to the base to recharge");
+    ?baseCoord(Dest);
+    !goToBase;
+    !rechargeFully;
+    -batteryLow;
+    !!start.
++battery(0) <-
+    .drop_all_intentions;
+    .print("Ran out of battery :(").
 
-+!returnToBase <-
-    ?baseCoord(B);
-    !goTowards(B).
-
++!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
+    ?rechargeSpeedMs(S);
+    .wait(S);
+    recharge;
+    !rechargeFully.
++!rechargeFully.
 
 // >>>>>>>>>> EXCHANGING KNOWLEDGE SECTION <<<<<<<<<<
 // As soon as i get in range with R i will send him my knowledge.
@@ -69,17 +79,35 @@ movementSpeedMs(200).
 -!updateCellIfNewer <- .print("failed updateCellIfNewer").
 
 // >>>>>>>>>> UTILITIES SECTION <<<<<<<<<<
-+!goTowards(Dest) : selfCoord(Dest) <-
-    .print("Arrived at destination!").
-+!goTowards(Dest) : selfCoord(Pos) & adjacent(Pos, Dest) & not(walkable(Dest))  <-
-    .print("Arrived at destination!").
-+!goTowards(Dest) : selfCoord(Pos) <-
+
+// This is less strict than goTowards as it just requires the rover to reach the base and not a specific coord
++!goToBase : not(inBase) <-
+    ?baseCoord(Base);
+    !moveTowards(Base);
+    !goToBase.
++!goToBase.
+
+inBase :- selfCoord(Pos) & cell(Pos, base, _).
+
+// Goes to the given destination or to an adjacent cells if the destination is not walkable
++!goTowards(Dest) : selfCoord(Dest).
++!goTowards(Dest) : selfCoord(Pos) & adjacent(Pos, Dest) & not(walkable(Dest)).
++!goTowards(Dest) <-
+    !moveTowards(Dest);
+    !goTowards(Dest).
+
+// Perform one movement towards the given destination
++!moveTowards(Dest) : selfCoord(Dest).
++!moveTowards(Dest) <-
+    ?selfCoord(Pos);
     .findall(tuple(D, Dir), direction(Dir) & canMove(Dir) & applyDir(Pos, Dir, C) & distance(C, Dest, D), AvailableDirs);
     .min(AvailableDirs, tuple(_, Dir));
-    move(Dir);
     ?movementSpeedMs(S);
     .wait(S);
-    !!goTowards(Dest).
+    move(Dir).
+
++!safeMove(Dir) <- move(Dir).
+-!safeMove(Dir).
 
 canMove(Dir) :- selfCoord(Pos) & applyDir(Pos, Dir, C) & walkable(C).
 
@@ -93,9 +121,9 @@ applyDir(coord(X, Y), down, coord(X, Y - 1)).
 applyDir(coord(X, Y), left, coord(X - 1, Y)).
 applyDir(coord(X, Y), right, coord(X + 1, Y)).
 
-walkable(C) :- cell(C, base, _).
-walkable(C) :- cell(C, empty, _).
-walkable(C) :- cell(C, sample, _).
+walkable(C) :- cell(C, base, _) & not(rover(C)).
+walkable(C) :- cell(C, empty, _) & not(rover(C)).
+walkable(C) :- cell(C, sample, _) & not(rover(C)).
 
 adjacent(C1, C2) :- distance(C1, C2, D) & D < 2.
 
