@@ -120,6 +120,7 @@ public class Mars {
         final var newCoordinates = coordinates.apply(motion);
         if (canBeMovedOn(newCoordinates)) {
             roverCoordinates.put(rover, newCoordinates);
+            rover.updateBatteryWith(-1);
         }
     }
 

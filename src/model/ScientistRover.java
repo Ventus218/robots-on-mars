@@ -6,8 +6,9 @@ public class ScientistRover implements Rover {
     private final int carriedSamples = 0;
     private final int samplesCapacity;
 
-    public ScientistRover(String name, int battery, int cameraRange, int antennaRange, int samplesCapacity) {
-        this.rover = new SimpleRover(name, battery, cameraRange, antennaRange);
+    public ScientistRover(String name, int battery, int batteryCapacity, int cameraRange, int antennaRange,
+            int samplesCapacity) {
+        this.rover = new SimpleRover(name, battery, batteryCapacity, cameraRange, antennaRange);
         this.samplesCapacity = samplesCapacity;
     }
 
@@ -19,6 +20,11 @@ public class ScientistRover implements Rover {
     @Override
     public int battery() {
         return rover.battery();
+    }
+
+    @Override
+    public int batteryCapacity() {
+        return rover.batteryCapacity();
     }
 
     @Override
@@ -34,6 +40,11 @@ public class ScientistRover implements Rover {
     @Override
     public MarsView marsView() {
         return this.rover.marsView();
+    }
+
+    @Override
+    public void updateBatteryWith(int update) {
+        rover.updateBatteryWith(update);
     }
 
     public int carriedSamples() {

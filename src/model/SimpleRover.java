@@ -2,14 +2,16 @@ package src.model;
 
 public class SimpleRover implements Rover {
     private final String name;
-    private final int battery;
+    private int battery;
+    private final int batteryCapacity;
     private final int cameraRange;
     private final int antennaRange;
     private final MarsView marsView = new MarsView();
 
-    public SimpleRover(String name, int battery, int cameraRange, int antennaRange) {
+    public SimpleRover(String name, int battery, int batteryCapacity, int cameraRange, int antennaRange) {
         this.name = name;
         this.battery = battery;
+        this.batteryCapacity = batteryCapacity;
         this.cameraRange = cameraRange;
         this.antennaRange = antennaRange;
     }
@@ -25,6 +27,11 @@ public class SimpleRover implements Rover {
     }
 
     @Override
+    public int batteryCapacity() {
+        return batteryCapacity;
+    }
+
+    @Override
     public int cameraRange() {
         return cameraRange;
     }
@@ -37,5 +44,12 @@ public class SimpleRover implements Rover {
     @Override
     public MarsView marsView() {
         return this.marsView;
+    }
+
+    @Override
+    public void updateBatteryWith(int update) {
+        battery = battery + update;
+        battery = Math.min(batteryCapacity, battery);
+        battery = Math.max(0, battery);
     }
 }

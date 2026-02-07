@@ -29,6 +29,7 @@ public class Env extends Environment {
     private final int ROVER_BATTERY_CAPACITY = 100;
     private final int ROVER_CAMERA_RANGE = 3;
     private final int ROVER_ANTENNA_RANGE = 7;
+    private final int SCIENTIST_SAMPLES_CAPACITY = 15;
 
     private Mars mars = new Mars(
             MARS_SIZE,
@@ -39,11 +40,14 @@ public class Env extends Environment {
             MARS_BASE_ANTENNA_RANGE);
 
     private Rover simpleRoverNamed(String name) {
-        return new SimpleRover(name, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE, ROVER_ANTENNA_RANGE);
+        return new SimpleRover(name, ROVER_BATTERY_CAPACITY, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE,
+                ROVER_ANTENNA_RANGE);
     }
 
     private Rover scientistRoverNamed(String name) {
-        return new ScientistRover(name, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE, ROVER_ANTENNA_RANGE);
+        return new ScientistRover(name, ROVER_BATTERY_CAPACITY, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE,
+                ROVER_ANTENNA_RANGE,
+                SCIENTIST_SAMPLES_CAPACITY);
     }
 
     /** Called before the MAS execution with the args informed in .mas2j */
@@ -115,6 +119,8 @@ public class Env extends Environment {
                     .toList();
             percepts.addAll(cameraPercepts);
 
+            percepts.add(ASSyntax.createLiteral("battery", ASSyntax.createNumber(rover.battery())));
+
             percepts.addAll(mars.reachableRovers(rover).stream().map(Rover::name).map(Lit::toInRange).toList());
             if (mars.canReachBase(rover)) {
                 percepts.add(Lit.toInRange("base"));
@@ -125,7 +131,7 @@ public class Env extends Environment {
 
     private Rover spawnIfMissing(String agName) {
         return mars.rover(agName).orElseGet(() -> {
-            final var rover = simpleRoverNamed(agName);
+            final var rover = scientistRoverNamed(agName);
             mars.spawn(rover);
             return rover;
         });
