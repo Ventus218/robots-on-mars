@@ -2,37 +2,28 @@
 
 /* Initial goals */
 
-
+/* Plans */
 
 // >>>>>>>>>> EXCHANGING KNOWLEDGE SECTION <<<<<<<<<<
-// Constantly trying to exchange knowledge with neighbours.
-// The term represents the minimum interval at which re-sending knowledge
-!exchangeKnowledge(1000).
-
-// exchangeKnowledge MinInterval time has passed and i am in range with R.
-// I will send knowledge, wait for the MinInterval and re-instantiate goal.
-+!exchangeKnowledge(MinInterval) : inRange(R) <-
-    !sendKnowledge(R);
-    .wait(MinInterval);
-    !!exchangeKnowledge(MinInterval).
-// exchangeKnowledge MinInterval time has passed but i'm in range with nobody.
-// I will wait for the MinInterval and re-instantiate goal.
-+!exchangeKnowledge(MinInterval) <-
-    .wait(MinInterval);
-    !!exchangeKnowledge(MinInterval).
-
-// As soon as i get in range of R i will send my knowledge to him
+// As soon as i get in range with R i will send him my knowledge.
 +inRange(R) <- !sendKnowledge(R).
 
-+!sendKnowledge(R) <-
+// If i'm in range with R i will send him knowledge and reschedule sendKnowledge
+// in case we keep staying in range for some time.
++!sendKnowledge(R) : inRange(R) <-
     .print("Sending knowledge to ", R);
     .findall(cell(coord(X, Y), Terrain, TS), cell(coord(X, Y), Terrain, TS), Cells);
-    .send(R, achieve, mergeMarsView(Cells)).
+    .send(R, achieve, mergeMarsView(Cells));
+    // Reschedule plan
+    .wait(1000);
+    !!sendKnowledge(R).
++!sendKnowledge(R).
+-!sendKnowledge <- .print("failed sendKnowledge").
 
-+!mergeMarsView([]).
 +!mergeMarsView([Cell | Tail]) <-
     !updateCellIfNewer(Cell);
     !mergeMarsView(Tail).
++!mergeMarsView([]).
 -!mergeMarsView <- .print("failed mergeMarsView").
 
 // If i have newer data about that cell i will do nothing.
