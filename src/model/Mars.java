@@ -60,7 +60,7 @@ public class Mars {
         }
     }
 
-    private void placeWithDensity(Terrain t, double density) {
+    synchronized private void placeWithDensity(Terrain t, double density) {
         var toPlace = area() * density;
 
         while (toPlace > 0) {
@@ -73,45 +73,45 @@ public class Mars {
 
     }
 
-    private int randomInBounds() {
+    synchronized private int randomInBounds() {
         return random.nextInt(negativeBound(), positiveBound() + 1);
     }
 
-    private int randomInBaseBounds() {
+    synchronized private int randomInBaseBounds() {
         return random.nextInt(base.negativeBound(), base.positiveBound() + 1);
     }
 
-    private int area() {
+    synchronized private int area() {
         return side() * side();
     }
 
-    public int negativeBound() {
+    synchronized public int negativeBound() {
         return -bound;
     }
 
-    public int positiveBound() {
+    synchronized public int positiveBound() {
         return bound;
     }
 
-    public int side() {
+    synchronized public int side() {
         return bound * 2 + 1;
     }
 
-    public Terrain terrainAt(Coordinates coordinates) {
+    synchronized public Terrain terrainAt(Coordinates coordinates) {
         assert isInsideBounds(coordinates);
         return terrain.get(coordinates);
     }
 
-    public Set<Rover> rovers() {
+    synchronized public Set<Rover> rovers() {
         return roverCoordinates().keySet();
     }
 
-    public Optional<Rover> roverAtCoordinates(Coordinates coordinates) {
+    synchronized public Optional<Rover> roverAtCoordinates(Coordinates coordinates) {
         return roverCoordinates().entrySet().stream().filter(e -> e.getValue().equals(coordinates)).map(e -> e.getKey())
                 .findFirst();
     }
 
-    public Optional<Rover> rover(String name) {
+    synchronized public Optional<Rover> rover(String name) {
         return rovers().stream().filter(r -> r.name().equals(name)).findFirst();
     }
 
@@ -139,7 +139,7 @@ public class Mars {
         return reachableRovers;
     }
 
-    public boolean canReachBase(Rover rover) {
+    synchronized public boolean canReachBase(Rover rover) {
         final var roverCoord = roverCoordinates().get(rover);
         return roverCoord.distanceTo(baseCenter) <= rover.antennaRange();
     }
@@ -175,7 +175,7 @@ public class Mars {
                 .toList();
     }
 
-    private Set<Coordinates> allCoordinates() {
+    synchronized private Set<Coordinates> allCoordinates() {
         final var result = new HashSet<Coordinates>();
         for (var x = negativeBound(); x <= positiveBound(); x++) {
             for (var y = negativeBound(); y <= positiveBound(); y++) {
@@ -194,19 +194,19 @@ public class Mars {
         informListeners();
     }
 
-    private void informListeners() {
+    synchronized private void informListeners() {
         listeners.stream().forEach(Listener::marsUpdated);
     }
 
-    public void addListener(Listener l) {
+    synchronized public void addListener(Listener l) {
         this.listeners.add(l);
     }
 
-    public void removeListener(Listener l) {
+    synchronized public void removeListener(Listener l) {
         this.listeners.remove(l);
     }
 
-    private Set<Coordinates> radiusOver(Coordinates coordinates, int radius) {
+    synchronized private Set<Coordinates> radiusOver(Coordinates coordinates, int radius) {
         final Set<Coordinates> result = new HashSet<>();
         final var r2 = radius * radius;
 
@@ -223,13 +223,13 @@ public class Mars {
         return result;
     }
 
-    public Set<Direction> availableDirections(Rover r) {
+    synchronized public Set<Direction> availableDirections(Rover r) {
         return Direction.all().stream()
                 .filter(d -> canBeMovedOn(roverCoordinates().get(r).apply(d)))
                 .collect(Collectors.toSet());
     }
 
-    private boolean canBeMovedOn(Coordinates coordinates) {
+    synchronized private boolean canBeMovedOn(Coordinates coordinates) {
         return switch (terrainAt(coordinates)) {
             case Terrain.Obstacle() -> false;
             case Terrain.MiningSpot() -> false;
@@ -237,19 +237,19 @@ public class Mars {
         } && roverAtCoordinates(coordinates).isEmpty() && isInsideBounds(coordinates);
     }
 
-    public Set<Coordinates> cameraRangeOf(Rover r) {
+    synchronized public Set<Coordinates> cameraRangeOf(Rover r) {
         return radiusOver(roverCoordinates().get(r), r.cameraRange());
     }
 
-    public boolean isInsideBounds(Coordinates coordinates) {
+    synchronized public boolean isInsideBounds(Coordinates coordinates) {
         return Math.abs(coordinates.x()) <= positiveBound() && Math.abs(coordinates.y()) <= positiveBound();
     }
 
-    public Set<Coordinates> antennaRangeOf(Rover r) {
+    synchronized public Set<Coordinates> antennaRangeOf(Rover r) {
         return radiusOver(roverCoordinates().get(r), r.antennaRange());
     }
 
-    public Set<Coordinates> antennaRangeOfBase() {
+    synchronized public Set<Coordinates> antennaRangeOfBase() {
         return radiusOver(baseCenter, base.antennaRange());
     }
 
@@ -263,11 +263,11 @@ public class Mars {
         informListeners();
     }
 
-    public Map<Rover, Coordinates> roverCoordinates() {
+    synchronized public Map<Rover, Coordinates> roverCoordinates() {
         return Map.copyOf(roverCoordinates);
     }
 
-    public Base base() {
+    synchronized public Base base() {
         return base;
     }
 
