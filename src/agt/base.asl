@@ -38,17 +38,14 @@ allCells([]).
     .wait(1000);
     !!sendKnowledge(R).
 +!sendKnowledge(R).
--!sendKnowledge <- .print("failed sendKnowledge").
 
 +!mergeMarsView([Cell | Tail]) <-
     !updateCellIfNewer(Cell);
     !mergeMarsView(Tail).
 +!mergeMarsView([]).
--!mergeMarsView <- .print("failed mergeMarsView").
 
 // If i have newer data about that cell i will do nothing.
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
 // Otherwise i will update my knowledge about that cell.
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
     !saveCell(coord(X, Y), Terrain, Timestamp).
--!updateCellIfNewer <- .print("failed updateCellIfNewer").

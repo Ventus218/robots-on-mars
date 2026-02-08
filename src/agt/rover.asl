@@ -42,7 +42,7 @@ allCells([]).
     ?movementSpeedMs(S);
     .wait(S);
     !!explore.
--!explore <- .print("failed explore").
+-!explore <- !!explore.
 
 +see(C, Terrain) <-
     !saveCell(C, Terrain, system.time).
@@ -54,7 +54,6 @@ allCells([]).
 +battery(B) : not(batteryLow) & distanceFromBase(D) & B <= (math.sqrt((D*D) / 2) * 2) + 10 <-
     +batteryLow;
     .drop_intention(explore);
-    .print("Going to the base to recharge");
     ?baseCoord(Dest);
     !goToBase;
     !rechargeFully;
@@ -84,20 +83,17 @@ allCells([]).
     .wait(1000);
     !!sendKnowledge(R).
 +!sendKnowledge(R).
--!sendKnowledge <- .print("failed sendKnowledge").
 
 +!mergeMarsView([Cell | Tail]) <-
     !updateCellIfNewer(Cell);
     !mergeMarsView(Tail).
 +!mergeMarsView([]).
--!mergeMarsView <- .print("failed mergeMarsView").
 
 // If i have newer data about that cell i will do nothing.
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
 // Otherwise i will update my knowledge about that cell.
 +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
     !saveCell(coord(X, Y), Terrain, Timestamp).
--!updateCellIfNewer <- .print("failed updateCellIfNewer").
 
 // >>>>>>>>>> UTILITIES SECTION <<<<<<<<<<
 
