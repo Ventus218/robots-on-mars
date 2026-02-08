@@ -1,11 +1,15 @@
 package src.view;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
 import src.model.*;
+import src.utils.Tuple;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,6 +28,9 @@ class GridPanel extends JPanel implements ViewModel.Listener {
     private final Color antennaOverlayColor = new Color(0.26f, 0.7f, 0.95f, 0.2f);
 
     private final Map<Coordinates, CellData> cells = new HashMap<>();
+    private final Map<Coordinates, CellData> changes = new HashMap<>();
+
+    private BufferedImage gridCanvas;
 
     public GridPanel(ViewModel model, int cellSize) throws IOException {
         this.model = model;
@@ -41,141 +48,135 @@ class GridPanel extends JPanel implements ViewModel.Listener {
         setPreferredSize(new Dimension(size, size));
         setBackground(Color.WHITE);
 
+        gridCanvas = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+
         redraw();
     }
 
     @Override
     public void viewModelChanged() {
-        redraw();
+        SwingUtilities.invokeLater(() -> {
+            redraw();
+        });
     }
 
     private void redraw() {
         final var knownArea = model.knownArea();
+        final var antennasToDisplay = new HashSet<Coordinates>();
+        final var roversToDisplay = new HashMap<Coordinates, Rover>();
+        if (model.selectedRover().isPresent()) {
+            final var rover = model.selectedRover().get();
+            antennasToDisplay.addAll(mars.reachableRovers(rover).stream().flatMap(r -> mars.antennaRangeOf(r).stream())
+                    .toList());
+            if (mars.canReachBase(rover)) {
+                antennasToDisplay.addAll(mars.antennaRangeOfBase());
+            }
+            antennasToDisplay.addAll(mars.antennaRangeOf(rover));
+            roversToDisplay.putAll(
+                    mars.cameraRangeOf(rover).stream()
+                            .flatMap(c -> mars.roverAtCoordinates(c).map(r -> Tuple.of(r, c)).stream())
+                            .collect(Collectors.toMap(t -> t._2(), t -> t._1())));
+            roversToDisplay.put(mars.roverCoordinates().get(rover), rover);
+        } else {
+            antennasToDisplay.addAll(mars.rovers().stream().flatMap(r -> mars.antennaRangeOf(r).stream())
+                    .toList());
+            antennasToDisplay.addAll(mars.antennaRangeOfBase());
+            roversToDisplay.putAll(mars.roverCoordinates().entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getValue(), e -> e.getKey())));
+        }
         for (var x = mars.negativeBound(); x <= mars.positiveBound(); x++) {
             for (var y = mars.negativeBound(); y <= mars.positiveBound(); y++) {
+                var cellData = new CellData(Color.GRAY, null, null);
                 final var coordinates = new Coordinates(x, y);
-                setCellColor(coordinates, Color.GRAY);
-                setCellImg(coordinates, null);
-                setCellOverlay(coordinates, null);
                 if (knownArea.keySet().contains(coordinates)) {
                     final var terrain = knownArea.get(coordinates);
-                    setCellColor(coordinates, terrainColor);
+                    cellData = cellData.withColor(terrainColor);
                     switch (terrain) {
-                        case Terrain.Base() -> setCellImg(coordinates, baseImg);
-                        case Terrain.Obstacle() -> setCellImg(coordinates, obstacleImg);
-                        case Terrain.Sample() -> setCellImg(coordinates, sampleImg);
-                        case Terrain.MiningSpot() -> setCellImg(coordinates, miningSpotImg);
+                        case Terrain.Base() -> cellData = cellData.withImage(baseImg);
+                        case Terrain.Obstacle() -> cellData = cellData.withImage(obstacleImg);
+                        case Terrain.Sample() -> cellData = cellData.withImage(sampleImg);
+                        case Terrain.MiningSpot() -> cellData = cellData.withImage(miningSpotImg);
                         case Terrain.Empty() -> {
                         }
                     }
                 }
+                if (antennasToDisplay.contains(coordinates)) {
+                    cellData = cellData.withOverlay(antennaOverlayColor);
+                }
+                if (roversToDisplay.containsKey(coordinates)) {
+                    final var rover = roversToDisplay.get(coordinates);
+                    if (rover instanceof SimpleRover) {
+                        cellData = cellData.withImage(simpleRoverImg);
+                    } else {
+                        cellData = cellData.withImage(scientistRoverImg);
+                    }
+                }
+                if (!cells.getOrDefault(coordinates, new CellData(null, null, null)).equals(cellData)) {
+                    changes.put(coordinates, cellData);
+                    cells.put(coordinates, cellData);
+                }
             }
         }
-        if (model.selectedRover().isPresent()) {
-            final var rover = model.selectedRover().get();
-            final var coord = mars.roverCoordinates().get(rover);
-            displayRoverAt(coord, rover);
-            displayAntennaRangeOf(rover);
-            // Rovers in sight
-            mars.cameraRangeOf(rover)
-                    .forEach(c -> mars.roverAtCoordinates(c).ifPresent(neighbour -> displayRoverAt(c, neighbour)));
-            // Rovers in antenna range
-            mars.reachableRovers(rover).forEach(r -> displayAntennaRangeOf(r));
-            if (mars.canReachBase(rover)) {
-                displayAntennaRangeOfBase();
-            }
-        } else {
-            mars.roverCoordinates().entrySet().stream()
-                    .forEach(e -> {
-                        displayRoverAt(e.getValue(), e.getKey());
-                        displayAntennaRangeOf(e.getKey());
-                    });
-            displayAntennaRangeOfBase();
-        }
+
+        updateCanvas();
         repaint();
     }
 
-    private void displayRoverAt(Coordinates coordinates, Rover rover) {
-        if (rover instanceof SimpleRover) {
-            setCellImg(coordinates, simpleRoverImg);
-        } else {
-            setCellImg(coordinates, scientistRoverImg);
+    private void updateCanvas() {
+        Graphics2D g2 = gridCanvas.createGraphics();
+
+        for (var entry : changes.entrySet()) {
+            final var coord = entry.getKey();
+            CellData data = entry.getValue();
+
+            final int translatedX = coord.x() + mars.positiveBound();
+            final int translatedY = mars.side() - (coord.y() + mars.positiveBound());
+            int x = translatedX * cellSize;
+            int y = translatedY * cellSize;
+
+            g2.setBackground(getBackground());
+            g2.clearRect(x, y, cellSize, cellSize);
+
+            if (data.color != null) {
+                g2.setColor(data.color);
+                g2.fillRect(x, y, cellSize, cellSize);
+            }
+
+            if (data.image != null) {
+                g2.drawImage(data.image, x, y, cellSize, cellSize, null);
+            }
+
+            if (data.overlay != null) {
+                g2.setColor(data.overlay);
+                g2.fillRect(x, y, cellSize, cellSize);
+            }
         }
-    }
 
-    private void displayAntennaRangeOfBase() {
-        displayAntennaRange(mars.antennaRangeOfBase());
-    }
-
-    private void displayAntennaRangeOf(Rover rover) {
-        displayAntennaRange(mars.antennaRangeOf(rover));
-    }
-
-    private void displayAntennaRange(Set<Coordinates> coord) {
-        coord.forEach(c -> setCellOverlay(c, antennaOverlayColor));
-    }
-
-    private void setCellImg(Coordinates coordinates, Image image) {
-        final var data = cells.getOrDefault(coordinates, new CellData(null, null, null));
-        data.image = image;
-        cells.put(coordinates, data);
-    }
-
-    private void setCellColor(Coordinates coordinates, Color color) {
-        final var data = cells.getOrDefault(coordinates, new CellData(null, null, null));
-        data.color = color;
-        cells.put(coordinates, data);
-    }
-
-    private void setCellOverlay(Coordinates coordinates, Color overlay) {
-        final var data = cells.getOrDefault(coordinates, new CellData(null, null, null));
-        data.overlay = overlay;
-        cells.put(coordinates, data);
+        g2.dispose();
+        changes.clear();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        Graphics2D g2 = (Graphics2D) g;
-
-        // Draw cells
-        for (Map.Entry<Coordinates, CellData> entry : cells.entrySet()) {
-            final int translatedX = entry.getKey().x() + mars.positiveBound();
-            final int translatedY = mars.side() - (entry.getKey().y() + mars.positiveBound());
-            Coordinates c = new Coordinates(translatedX, translatedY);
-            CellData data = entry.getValue();
-
-            int x = c.x() * cellSize;
-            int y = c.y() * cellSize;
-
-            // Fill color
-            if (data.color != null) {
-                g2.setColor(data.color);
-                g2.fillRect(x, y, cellSize, cellSize);
-            }
-
-            // Draw image
-            if (data.image != null) {
-                g2.drawImage(data.image, x, y, cellSize, cellSize, null);
-            }
-            // Fill color
-            if (data.overlay != null) {
-                g2.setColor(data.overlay);
-                g2.fillRect(x, y, cellSize, cellSize);
-            }
+        if (gridCanvas != null) {
+            g.drawImage(gridCanvas, 0, 0, null);
         }
     }
 
-    static class CellData {
-        Color color;
-        Image image;
-        Color overlay;
+    static record CellData(Color color, Image image, Color overlay) {
 
-        CellData(Color color, Image image, Color overlay) {
-            this.color = color;
-            this.image = image;
-            this.overlay = overlay;
+        CellData withColor(Color color) {
+            return new CellData(color, image, overlay);
+        }
+
+        CellData withImage(Image image) {
+            return new CellData(color, image, overlay);
+        }
+
+        CellData withOverlay(Color overlay) {
+            return new CellData(color, image, overlay);
         }
     }
 }
