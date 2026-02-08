@@ -16,6 +16,11 @@ cell(Coord, Terrain, Timestamp) :-
     cellMapInstance(M) &
     .map.get(M, Coord, data(Terrain, Timestamp)).
 
+allCells(Cells) :-
+    cellMapInstance(M) & 
+    .findall(cell(Coord, Terrain, TS), .map.key(M, Coord) & .map.get(M, Coord, data(Terrain, TS)), Cells).
+allCells([]).
+
 /* Initial goals */
 
 /* Plans */
@@ -27,7 +32,7 @@ cell(Coord, Terrain, Timestamp) :-
 // If i'm in range with R i will send him knowledge and reschedule sendKnowledge
 // in case we keep staying in range for some time.
 +!sendKnowledge(R) : inRange(R) <-
-    .findall(cell(coord(X, Y), Terrain, TS), cell(coord(X, Y), Terrain, TS), Cells);
+    ?allCells(Cells);
     .send(R, achieve, mergeMarsView(Cells));
     // Reschedule plan
     .wait(1000);
