@@ -52,7 +52,7 @@ public class AppFrame extends JFrame implements ViewModel.Listener {
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // --- Main Layout ---
-        gridPanel = new GridPanel(model, 12);
+        gridPanel = new GridPanel(model, 20);
         JScrollPane scrollPane = new JScrollPane(gridPanel);
         JScrollPane leftScroll = new JScrollPane(leftPanel);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftScroll, scrollPane);

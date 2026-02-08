@@ -18,15 +18,15 @@ public class Env extends Environment {
     private static Env instance;
 
     private Logger logger = Logger.getLogger("robotsOnMars." + Env.class.getName());
-    private final int MARS_SIZE = 40;
+    private final int MARS_SIZE = 35;
     private final float MARS_OBSTACLES_DENSITY = 0.05f;
     private final float MARS_SAMPLES_DENSITY = 0.005f;
     private final float MARS_MINING_SPOTS_DENSITY = 0.01f;
-    private final int MARS_BASE_SIZE = 2;
-    private final int MARS_BASE_ANTENNA_RANGE = 9;
+    private final int MARS_BASE_SIZE = 3;
+    private final int MARS_BASE_ANTENNA_RANGE = 7;
     private final int ROVER_BATTERY_CAPACITY = 100;
     private final int ROVER_CAMERA_RANGE = 3;
-    private final int ROVER_ANTENNA_RANGE = 7;
+    private final int ROVER_ANTENNA_RANGE = 5;
     private final int SCIENTIST_SAMPLES_CAPACITY = 15;
 
     private Mars mars = new Mars(
