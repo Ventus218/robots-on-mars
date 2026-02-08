@@ -50,11 +50,7 @@ class GridPanel extends JPanel implements ViewModel.Listener {
     }
 
     private void redraw() {
-        final var areaCoveredByAntennas = mars.rovers().stream().map(r -> mars.antennaRangeOf(r))
-                .flatMap(Set::stream).collect(Collectors.toSet());
-        areaCoveredByAntennas.addAll(mars.antennaRangeOfBase());
         final var knownArea = model.knownArea();
-        final var selectedRover = model.selectedRover();
         for (var x = mars.negativeBound(); x <= mars.positiveBound(); x++) {
             for (var y = mars.negativeBound(); y <= mars.positiveBound(); y++) {
                 final var coordinates = new Coordinates(x, y);
@@ -75,8 +71,8 @@ class GridPanel extends JPanel implements ViewModel.Listener {
                 }
             }
         }
-        if (selectedRover.isPresent()) {
-            final var rover = selectedRover.get();
+        if (model.selectedRover().isPresent()) {
+            final var rover = model.selectedRover().get();
             final var coord = mars.roverCoordinates().get(rover);
             displayRoverAt(coord, rover);
             displayAntennaRangeOf(rover);
