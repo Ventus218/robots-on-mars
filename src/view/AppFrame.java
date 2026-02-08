@@ -10,14 +10,15 @@ import src.model.Mars;
 import src.model.Rover;
 import src.model.ScientistRover;
 
-public class AppFrame extends JFrame implements Mars.Listener {
+public class AppFrame extends JFrame implements ViewModel.Listener {
 
     private final JPanel leftPanel;
     private final GridPanel gridPanel;
+    private final ViewModel model;
     private final Mars mars;
 
     @Override
-    public void marsUpdated() {
+    public void viewModelChanged() {
         SwingUtilities.invokeLater(() -> {
             leftPanel.removeAll();
 
@@ -33,10 +34,11 @@ public class AppFrame extends JFrame implements Mars.Listener {
         });
     }
 
-    public AppFrame(Mars mars) throws IOException {
+    public AppFrame(ViewModel model) throws IOException {
         super("Robots on Mars");
-        this.mars = mars;
-        mars.addListener(this);
+        this.model = model;
+        model.addListener(this);
+        this.mars = model.mars();
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 800);
@@ -50,12 +52,12 @@ public class AppFrame extends JFrame implements Mars.Listener {
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // --- Main Layout ---
-        gridPanel = new GridPanel(mars, 15);
+        gridPanel = new GridPanel(model, 12);
         JScrollPane scrollPane = new JScrollPane(gridPanel);
         JScrollPane leftScroll = new JScrollPane(leftPanel);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftScroll, scrollPane);
 
-        marsUpdated();
+        viewModelChanged();
 
         add(splitPane);
     }
@@ -90,13 +92,16 @@ public class AppFrame extends JFrame implements Mars.Listener {
         buttonPanel.setOpaque(false);
         buttonPanel.setBorder(new EmptyBorder(0, 5, 0, 5));
 
-        JButton eyeButton = new JButton("👁");
+        final var isSelectedRover = model.selectedRover().map(sel -> sel.equals(r)).orElse(false);
+        JToggleButton eyeButton = new JToggleButton("Focus", isSelectedRover);
         eyeButton.setFocusPainted(false);
         eyeButton.setToolTipText("View Rover POV");
+        if (isSelectedRover) {
+            eyeButton.setText("Unfocus");
+        }
 
-        // Logic placeholder
         eyeButton.addActionListener(e -> {
-            System.out.println("Eye clicked for: " + r.name());
+            model.selectRoverNamed(r.name());
         });
 
         buttonPanel.add(eyeButton);

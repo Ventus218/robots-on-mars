@@ -11,6 +11,7 @@ import jason.asSyntax.*;
 import jason.asSyntax.parser.ParseException;
 import jason.environment.Environment;
 import src.view.AppFrame;
+import src.view.ViewModel;
 import src.model.*;
 
 public class Env extends Environment {
@@ -60,7 +61,7 @@ public class Env extends Environment {
 
         SwingUtilities.invokeLater(() -> {
             try {
-                new AppFrame(mars).setVisible(true);
+                new AppFrame(new ViewModel(mars)).setVisible(true);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(1);

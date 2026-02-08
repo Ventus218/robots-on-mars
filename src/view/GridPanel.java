@@ -9,9 +9,10 @@ import src.model.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-class GridPanel extends JPanel implements Mars.Listener {
+class GridPanel extends JPanel implements ViewModel.Listener {
 
-    private final Mars model;
+    private final ViewModel model;
+    private final Mars mars;
     private final int cellSize;
     private final Image miningSpotImg;
     private final Image sampleImg;
@@ -20,11 +21,14 @@ class GridPanel extends JPanel implements Mars.Listener {
     private final Image simpleRoverImg;
     private final Image scientistRoverImg;
     private final Color terrainColor = new Color(243, 147, 107);
+    private final Color antennaOverlayColor = new Color(0.26f, 0.7f, 0.95f, 0.2f);
 
     private final Map<Coordinates, CellData> cells = new HashMap<>();
 
-    public GridPanel(Mars model, int cellSize) throws IOException {
+    public GridPanel(ViewModel model, int cellSize) throws IOException {
         this.model = model;
+        this.model.addListener(this);
+        this.mars = model.mars();
         this.cellSize = cellSize;
         miningSpotImg = ImageIO.read(getClass().getResource("/mining_spot.png"));
         sampleImg = ImageIO.read(getClass().getResource("/sample.png"));
@@ -33,63 +37,104 @@ class GridPanel extends JPanel implements Mars.Listener {
         simpleRoverImg = ImageIO.read(getClass().getResource("/simple_rover.png"));
         scientistRoverImg = ImageIO.read(getClass().getResource("/scientist_rover.png"));
 
-        int size = model.side() * cellSize;
+        int size = mars.side() * cellSize;
         setPreferredSize(new Dimension(size, size));
         setBackground(Color.WHITE);
 
-        this.model.addListener(this);
         redraw();
     }
 
     @Override
-    public void marsUpdated() {
+    public void viewModelChanged() {
         redraw();
     }
 
     private void redraw() {
-        final var areaCoveredByAntennas = model.rovers().stream().map(r -> model.antennaRangeOf(r))
+        final var areaCoveredByAntennas = mars.rovers().stream().map(r -> mars.antennaRangeOf(r))
                 .flatMap(Set::stream).collect(Collectors.toSet());
-        areaCoveredByAntennas.addAll(model.antennaRangeOfBase());
+        areaCoveredByAntennas.addAll(mars.antennaRangeOfBase());
         final var knownArea = model.knownArea();
-        for (var x = model.negativeBound(); x <= model.positiveBound(); x++) {
-            for (var y = model.negativeBound(); y <= model.positiveBound(); y++) {
+        final var selectedRover = model.selectedRover();
+        for (var x = mars.negativeBound(); x <= mars.positiveBound(); x++) {
+            for (var y = mars.negativeBound(); y <= mars.positiveBound(); y++) {
                 final var coordinates = new Coordinates(x, y);
-                final var terrain = model.terrainAt(new Coordinates(x, y));
-                final var cellData = new CellData(Color.GRAY, "", null, null);
-                if (knownArea.contains(coordinates)) {
-                    cellData.color = terrainColor;
+                setCellColor(coordinates, Color.GRAY);
+                setCellImg(coordinates, null);
+                setCellOverlay(coordinates, null);
+                if (knownArea.keySet().contains(coordinates)) {
+                    final var terrain = knownArea.get(coordinates);
+                    setCellColor(coordinates, terrainColor);
                     switch (terrain) {
-                        case Terrain.Base() -> cellData.image = baseImg;
-                        case Terrain.Obstacle() -> cellData.image = obstacleImg;
-                        case Terrain.Sample() -> cellData.image = sampleImg;
-                        case Terrain.MiningSpot() -> cellData.image = miningSpotImg;
+                        case Terrain.Base() -> setCellImg(coordinates, baseImg);
+                        case Terrain.Obstacle() -> setCellImg(coordinates, obstacleImg);
+                        case Terrain.Sample() -> setCellImg(coordinates, sampleImg);
+                        case Terrain.MiningSpot() -> setCellImg(coordinates, miningSpotImg);
                         case Terrain.Empty() -> {
                         }
                     }
                 }
-                final var rover = model.roverAtCoordinates(coordinates);
-                if (rover.isPresent()) {
-                    if (rover.get() instanceof SimpleRover) {
-                        cellData.image = simpleRoverImg;
-                    } else {
-                        cellData.image = scientistRoverImg;
-                    }
-                }
-                if (areaCoveredByAntennas.contains(coordinates)) {
-                    cellData.overlay = new Color(0.26f, 0.7f, 0.95f, 0.2f);
-                }
-                setCell(coordinates, cellData);
             }
+        }
+        if (selectedRover.isPresent()) {
+            final var rover = selectedRover.get();
+            final var coord = mars.roverCoordinates().get(rover);
+            displayRoverAt(coord, rover);
+            displayAntennaRangeOf(rover);
+            // Rovers in sight
+            mars.cameraRangeOf(rover)
+                    .forEach(c -> mars.roverAtCoordinates(c).ifPresent(neighbour -> displayRoverAt(c, neighbour)));
+            // Rovers in antenna range
+            mars.reachableRovers(rover).forEach(r -> displayAntennaRangeOf(r));
+            if (mars.canReachBase(rover)) {
+                displayAntennaRangeOfBase();
+            }
+        } else {
+            mars.roverCoordinates().entrySet().stream()
+                    .forEach(e -> {
+                        displayRoverAt(e.getValue(), e.getKey());
+                        displayAntennaRangeOf(e.getKey());
+                    });
+            displayAntennaRangeOfBase();
         }
         repaint();
     }
 
-    private void setCell(Coordinates coordinates, CellData cellData) {
-        final int x = coordinates.x() + model.positiveBound();
-        // Translate coordinate system
-        final int y = model.side() - (coordinates.y() + model.positiveBound());
+    private void displayRoverAt(Coordinates coordinates, Rover rover) {
+        if (rover instanceof SimpleRover) {
+            setCellImg(coordinates, simpleRoverImg);
+        } else {
+            setCellImg(coordinates, scientistRoverImg);
+        }
+    }
 
-        cells.put(new Coordinates(x, y), cellData);
+    private void displayAntennaRangeOfBase() {
+        displayAntennaRange(mars.antennaRangeOfBase());
+    }
+
+    private void displayAntennaRangeOf(Rover rover) {
+        displayAntennaRange(mars.antennaRangeOf(rover));
+    }
+
+    private void displayAntennaRange(Set<Coordinates> coord) {
+        coord.forEach(c -> setCellOverlay(c, antennaOverlayColor));
+    }
+
+    private void setCellImg(Coordinates coordinates, Image image) {
+        final var data = cells.getOrDefault(coordinates, new CellData(null, null, null));
+        data.image = image;
+        cells.put(coordinates, data);
+    }
+
+    private void setCellColor(Coordinates coordinates, Color color) {
+        final var data = cells.getOrDefault(coordinates, new CellData(null, null, null));
+        data.color = color;
+        cells.put(coordinates, data);
+    }
+
+    private void setCellOverlay(Coordinates coordinates, Color overlay) {
+        final var data = cells.getOrDefault(coordinates, new CellData(null, null, null));
+        data.overlay = overlay;
+        cells.put(coordinates, data);
     }
 
     @Override
@@ -100,11 +145,13 @@ class GridPanel extends JPanel implements Mars.Listener {
 
         // Draw cells
         for (Map.Entry<Coordinates, CellData> entry : cells.entrySet()) {
-            Coordinates p = entry.getKey();
+            final int translatedX = entry.getKey().x() + mars.positiveBound();
+            final int translatedY = mars.side() - (entry.getKey().y() + mars.positiveBound());
+            Coordinates c = new Coordinates(translatedX, translatedY);
             CellData data = entry.getValue();
 
-            int x = p.x() * cellSize;
-            int y = p.y() * cellSize;
+            int x = c.x() * cellSize;
+            int y = c.y() * cellSize;
 
             // Fill color
             if (data.color != null) {
@@ -121,27 +168,16 @@ class GridPanel extends JPanel implements Mars.Listener {
                 g2.setColor(data.overlay);
                 g2.fillRect(x, y, cellSize, cellSize);
             }
-
-            // Draw text
-            if (data.text != null && !data.text.isEmpty()) {
-                g2.setColor(Color.BLACK);
-                FontMetrics fm = g2.getFontMetrics();
-                int tx = x + (cellSize - fm.stringWidth(data.text)) / 2;
-                int ty = y + (cellSize + fm.getAscent()) / 2 - 2;
-                g2.drawString(data.text, tx, ty);
-            }
         }
     }
 
     static class CellData {
         Color color;
-        String text;
         Image image;
         Color overlay;
 
-        CellData(Color color, String text, Image image, Color overlay) {
+        CellData(Color color, Image image, Color overlay) {
             this.color = color;
-            this.text = text;
             this.image = image;
             this.overlay = overlay;
         }
