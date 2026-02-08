@@ -15,7 +15,7 @@ public class MarsView {
                 .collect(Collectors.toMap(e -> e.getKey(), e -> (TerrainView.Known) e.getValue()));
     }
 
-    synchronized public void updateView(Map<Coordinates, TerrainView.Known> update) {
-        update.entrySet().stream().forEach(e -> view.put(e.getKey(), e.getValue()));
+    synchronized public void updateView(Coordinates coord, TerrainView.Known terrain) {
+        view.put(coord, terrain);
     }
 }

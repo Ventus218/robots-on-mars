@@ -274,7 +274,7 @@ public class Mars {
     }
 
     synchronized public void updateMarsViewOf(HasViewOfMars h, Coordinates c, Terrain t) {
-        h.marsView().updateView(Map.of(c, new TerrainView.Known(t)));
+        h.marsView().updateView(c, new TerrainView.Known(t));
         informListeners();
     }
 
