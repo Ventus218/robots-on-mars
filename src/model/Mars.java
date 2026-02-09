@@ -195,6 +195,7 @@ public class Mars {
             case Action.Recharge(var r) -> updateRoverBattery(r);
             case Action.CollectSample(var r, var coord) -> collectSample(r, coord);
             case Action.MineSample(var r, var coord) -> mineSample(r, coord);
+            case Action.DepositSamples(var r) -> depositSamples(r);
             default -> false;
         };
         informListeners();
@@ -227,6 +228,16 @@ public class Mars {
         // Distance < 2 --> adjacent
         if (roverCoord.distanceTo(miningSpotCoord) < 2 && rover.mineSample()) {
             terrain.put(miningSpotCoord, new Terrain.Sample());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    synchronized private boolean depositSamples(ScientistRover rover) {
+        final var roverCoord = roverCoordinates().get(rover);
+        if (terrainAt(roverCoord) instanceof Terrain.Base) {
+            rover.depositSamples();
             return true;
         } else {
             return false;

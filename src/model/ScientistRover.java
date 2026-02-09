@@ -75,6 +75,10 @@ public class ScientistRover implements Rover {
         }
     }
 
+    public void depositSamples() {
+        carriedSamples = 0;
+    }
+
     public int miningSampleEnergyCost() {
         return miningSampleEnergyCost;
     }

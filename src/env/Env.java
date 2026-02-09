@@ -27,7 +27,7 @@ public class Env extends Environment {
     private final int ROVER_BATTERY_CAPACITY = 100;
     private final int ROVER_CAMERA_RANGE = 3;
     private final int ROVER_ANTENNA_RANGE = 5;
-    private final int SCIENTIST_SAMPLES_CAPACITY = 15;
+    private final int SCIENTIST_SAMPLES_CAPACITY = 2;
     private final int SCIENTIST_MINING_SAMPLE_ENERGY_COST = 10;
 
     private Mars mars = new Mars(
@@ -95,6 +95,8 @@ public class Env extends Environment {
         } else if (action.getFunctor().equals(Lit.collectSampleAction.getFunctor())) {
             final var coord = Lit.toCoordinates(action.getTerm(0));
             actionToPerform = Optional.of(new Action.CollectSample((ScientistRover) rover, coord));
+        } else if (action.getFunctor().equals(Lit.depositSamplesAction.getFunctor())) {
+            actionToPerform = Optional.of(new Action.DepositSamples((ScientistRover) rover));
         } else {
             logger.info("executing: " + action + ", but not implemented!");
         }
@@ -188,6 +190,7 @@ public class Env extends Environment {
         public static final Literal saveCellAction = ASSyntax.createLiteral("saveCellAction");
         public static final Literal mineSampleAction = ASSyntax.createLiteral("mineSampleAction");
         public static final Literal collectSampleAction = ASSyntax.createLiteral("collectSampleAction");
+        public static final Literal depositSamplesAction = ASSyntax.createLiteral("depositSamplesAction");
         public static final Literal up = ASSyntax.createAtom("up");
         public static final Literal down = ASSyntax.createAtom("down");
         public static final Literal left = ASSyntax.createAtom("left");

@@ -30,9 +30,14 @@ allCells([]).
 
 /* Initial goals */
 
-!start.
+!init.
 
 /* Plans */
+
++!init : iAmAScientist <-
+    !!depositSamples;
+    !!start.
++!init <- !!start.
 
 +!start : iAmAScientist <- 
     !!science;
@@ -77,6 +82,17 @@ allCells([]).
 
 // >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
 // If we are here we assume that the rover is a Scientist
+
++!depositSamples : inBase & collectedSamples(S) & S > 0 <- 
+    depositSamplesAction;
+    !!depositSamples.
++!depositSamples <- !!depositSamples.
+
++collectedSamples(C) : not(hasSpaceForSample) <-
+    .drop_intention(explore);
+    .drop_intention(science);
+    !goToBase;
+    !!start.
 
 // There's science work to do right next to me, i'll do it
 +!science : bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
