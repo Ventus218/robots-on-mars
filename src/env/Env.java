@@ -99,10 +99,9 @@ public class Env extends Environment {
             logger.info("executing: " + action + ", but not implemented!");
         }
 
-        informAgsEnvironmentChanged();
         return actionToPerform.stream()
                 .map(a -> mars.performAction(a))
-                .peek(r -> informAgsEnvironmentChanged())
+                .peek(result -> informAgsEnvironmentChanged())
                 .findFirst()
                 .orElse(true);
     }

@@ -78,10 +78,13 @@ allCells([]).
 // >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
 // If we are here we assume that the rover is a Scientist
 
+// There's science work to do right next to me, i'll do it
 +!science : bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
     .drop_intention(explore);
     !doScienceWork(cell(Coord, Terr, TS));
+    .wait(10); //perceive does not work;
     !!start.
+// There's science work to do i'll move towards it
 +!science : bestScienceWork(cell(Coord, Terr, TS)) <-
     .drop_intention(explore);
     !moveTowards(Coord);
@@ -105,12 +108,10 @@ selectScienceWork(cell(Coord, Terr, TS), [cell(Coord, Terr, TS) | T]) :-
 selectScienceWork(Cell, [_ | T]) :- selectScienceWork(Cell, T).
 
 +!doScienceWork(cell(Coord, sample, _)) : hasSpaceForSample <-
-    .print("collecting sample");
     ?collectSampleSpeedMs(S);
     .wait(S);
     collectSampleAction(Coord).
 +!doScienceWork(cell(Coord, miningSpot, _)) <-
-    .print("mining sample");
     ?mineSampleSpeedMs(S);
     .wait(S);
     mineSampleAction(Coord).
