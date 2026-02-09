@@ -193,6 +193,8 @@ public class Mars {
         final var res = switch (action) {
             case Action.Move(var r, var dir) -> moveRover(r, dir);
             case Action.Recharge(var r) -> updateRoverBattery(r);
+            case Action.CollectSample(var r, var coord) -> collectSample(r, coord);
+            case Action.MineSample(var r, var coord) -> mineSample(r, coord);
             default -> false;
         };
         informListeners();
@@ -203,6 +205,28 @@ public class Mars {
         final var roverCoord = roverCoordinates().get(rover);
         if (terrainAt(roverCoord) instanceof Terrain.Base) {
             rover.updateBatteryWith(10);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    synchronized private boolean collectSample(ScientistRover rover, Coordinates sampleCoord) {
+        final var roverCoord = roverCoordinates().get(rover);
+        // Distance < 2 --> adjacent
+        if (roverCoord.distanceTo(sampleCoord) < 2 && rover.collectSample()) {
+            terrain.put(sampleCoord, new Terrain.Empty());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    synchronized private boolean mineSample(ScientistRover rover, Coordinates miningSpotCoord) {
+        final var roverCoord = roverCoordinates().get(rover);
+        // Distance < 2 --> adjacent
+        if (roverCoord.distanceTo(miningSpotCoord) < 2 && rover.mineSample()) {
+            terrain.put(miningSpotCoord, new Terrain.Sample());
             return true;
         } else {
             return false;

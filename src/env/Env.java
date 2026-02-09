@@ -28,6 +28,7 @@ public class Env extends Environment {
     private final int ROVER_CAMERA_RANGE = 3;
     private final int ROVER_ANTENNA_RANGE = 5;
     private final int SCIENTIST_SAMPLES_CAPACITY = 15;
+    private final int SCIENTIST_MINING_SAMPLE_ENERGY_COST = 10;
 
     private Mars mars = new Mars(
             MARS_SIZE,
@@ -45,7 +46,7 @@ public class Env extends Environment {
     private Rover scientistRoverNamed(String name) {
         return new ScientistRover(name, ROVER_BATTERY_CAPACITY, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE,
                 ROVER_ANTENNA_RANGE,
-                SCIENTIST_SAMPLES_CAPACITY);
+                SCIENTIST_SAMPLES_CAPACITY, SCIENTIST_MINING_SAMPLE_ENERGY_COST);
     }
 
     /** Called before the MAS execution with the args informed in .mas2j */
@@ -88,6 +89,12 @@ public class Env extends Environment {
             actionToPerform = Optional.of(new Action.Move(rover, direction));
         } else if (action.getFunctor().equals(Lit.rechargeAction.getFunctor())) {
             actionToPerform = Optional.of(new Action.Recharge(rover));
+        } else if (action.getFunctor().equals(Lit.mineSampleAction.getFunctor())) {
+            final var coord = Lit.toCoordinates(action.getTerm(0));
+            actionToPerform = Optional.of(new Action.MineSample((ScientistRover) rover, coord));
+        } else if (action.getFunctor().equals(Lit.collectSampleAction.getFunctor())) {
+            final var coord = Lit.toCoordinates(action.getTerm(0));
+            actionToPerform = Optional.of(new Action.CollectSample((ScientistRover) rover, coord));
         } else {
             logger.info("executing: " + action + ", but not implemented!");
         }
@@ -145,13 +152,24 @@ public class Env extends Environment {
             if (mars.canReachBase(rover)) {
                 percepts.add(Lit.toInRange("base"));
             }
+
+            if (rover instanceof ScientistRover scientist) {
+                percepts.add(ASSyntax.createLiteral("iAmAScientist"));
+                percepts.add(
+                        ASSyntax.createLiteral("collectedSamples", ASSyntax.createNumber(scientist.carriedSamples())));
+                percepts.add(
+                        ASSyntax.createLiteral("samplesCapacity", ASSyntax.createNumber(scientist.samplesCapacity())));
+                percepts.add(
+                        ASSyntax.createLiteral("miningBatteryCost",
+                                ASSyntax.createNumber(scientist.miningSampleEnergyCost())));
+            }
         }
         return percepts;
     }
 
     private Rover spawnIfMissing(String agName) {
         return mars.rover(agName).orElseGet(() -> {
-            final var rover = scientistRoverNamed(agName);
+            final var rover = agName.endsWith("S") ? scientistRoverNamed(agName) : simpleRoverNamed(agName);
             mars.spawn(rover);
             return rover;
         });
@@ -169,6 +187,8 @@ public class Env extends Environment {
         public static final Literal moveAction = ASSyntax.createLiteral("move");
         public static final Literal rechargeAction = ASSyntax.createLiteral("recharge");
         public static final Literal saveCellAction = ASSyntax.createLiteral("saveCellAction");
+        public static final Literal mineSampleAction = ASSyntax.createLiteral("mineSampleAction");
+        public static final Literal collectSampleAction = ASSyntax.createLiteral("collectSampleAction");
         public static final Literal up = ASSyntax.createAtom("up");
         public static final Literal down = ASSyntax.createAtom("down");
         public static final Literal left = ASSyntax.createAtom("left");

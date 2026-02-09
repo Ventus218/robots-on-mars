@@ -1,8 +1,11 @@
 // Agent alice in project robotsOnMars
 
 /* Initial beliefs and rules */
-movementSpeedMs(200).
+movementSpeedMs(1000).
 rechargeSpeedMs(2000).
+mineSampleSpeedMs(3000).
+collectSampleSpeedMs(3000).
+batterySafetyReserve(10).
 
 // Think about this as a belief, it's just a way to initialize it as soon as it's needed.
 +!cellMap(M) : cellMapInstance(M).
@@ -27,20 +30,21 @@ allCells([]).
 
 /* Initial goals */
 
-!init.
+!start.
 
 /* Plans */
 
-+!init <-
-    !!start.
-
-+!start <- 
++!start : iAmAScientist <- 
+    !!science;
     !!explore.
++!start <- !!explore.
+
+// >>>>>>>>>> EXPLORE SECTION <<<<<<<<<<
 
 +!explore <- 
-    exploreAction;
     ?movementSpeedMs(S);
     .wait(S);
+    exploreAction;
     !!explore.
 -!explore <- !!explore.
 
@@ -51,9 +55,10 @@ allCells([]).
 // Estimating the amount of energy needed to go back to the base plus a safety energy reserve.
 // Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
 // having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
-+battery(B) : not(batteryLow) & distanceFromBase(D) & B <= (math.sqrt((D*D) / 2) * 2) + 10 <-
++battery(B) : not(batteryLow) & selfCoord(Pos) & baseCoord(Base) & estimateBatteryUsage(Pos, Base, E) & batterySafetyReserve(S) & B <= E + S <-
     +batteryLow;
     .drop_intention(explore);
+    .drop_intention(science);
     ?baseCoord(Dest);
     !goToBase;
     !rechargeFully;
@@ -69,6 +74,65 @@ allCells([]).
     recharge;
     !rechargeFully.
 +!rechargeFully.
+
+// >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
+// If we are here we assume that the rover is a Scientist
+
++!science : bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
+    .drop_intention(explore);
+    !doScienceWork(cell(Coord, Terr, TS));
+    !!start.
++!science : bestScienceWork(cell(Coord, Terr, TS)) <-
+    .drop_intention(explore);
+    !moveTowards(Coord);
+    !!start.
+// There's no science work to do right now, i'll keep trying
++!science <- !!science. 
+
+bestScienceWork(Cell) :- 
+    scienceWorkAt(Cells) &
+    selectScienceWork(Cell, Cells).
+
+selectScienceWork(cell(Coord, Terr, TS), [cell(Coord, Terr, TS) | T]) :-
+    scienceBatteryCost(Terr, Cost) &
+    selfCoord(Pos) &
+    baseCoord(Base) &
+    estimateBatteryUsage(Pos, Coord, GoEnergy) &
+    estimateBatteryUsage(Coord, Base, ReturnEnergy) &
+    battery(B) &
+    batterySafetyReserve(Reserve) &
+    GoEnergy + Cost + ReturnEnergy + Reserve <= B.
+selectScienceWork(Cell, [_ | T]) :- selectScienceWork(Cell, T).
+
++!doScienceWork(cell(Coord, sample, _)) : hasSpaceForSample <-
+    .print("collecting sample");
+    ?collectSampleSpeedMs(S);
+    .wait(S);
+    collectSampleAction(Coord).
++!doScienceWork(cell(Coord, miningSpot, _)) <-
+    .print("mining sample");
+    ?mineSampleSpeedMs(S);
+    .wait(S);
+    mineSampleAction(Coord).
+
+hasSpaceForSample :- collectedSamples(S) & samplesCapacity(C) & S < C.
+
+estimateBatteryUsage(From, To, math.sqrt((D*D) / 2) * 2) :- distance(From, To, D).
+
+scienceBatteryCost(miningSpot, Cost) :- miningBatteryCost(Cost).
+scienceBatteryCost(sample, 0).
+
+// Find all coordinates for which there's science work to do and sort them by distance
+scienceWorkAt(WorkCells) :-
+    selfCoord(Pos) &
+    allCells(Cells) &
+    .findall(tuple(D, cell(C, Terr, TS)), .member(cell(C, Terr, TS), Cells) & (Terr == miningSpot | Terr == sample) & distance(Pos, C, D), Works) &
+    .sort(Works, Sorted) &
+    extractSecondFromTuple(Sorted, WorkCells).
+
+extractSecondFromTuple([], []).
+extractSecondFromTuple([tuple(A, B) | Tail], [B | Rest]) :-
+    extractSecondFromTuple(Tail, Rest).
 
 // >>>>>>>>>> EXCHANGING KNOWLEDGE SECTION <<<<<<<<<<
 // As soon as i get in range with R i will send him my knowledge.

@@ -17,11 +17,8 @@ MAS robotsOnMars {
     agents: 
         base base;
 
-        tony rover;
+        tonyS rover;
         bill rover;
-        sos rover;
-        siasdf rover;
-        frank rover;
 
     aslSourcePath: "src/agt";
 }
