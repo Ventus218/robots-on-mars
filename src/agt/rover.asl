@@ -106,12 +106,17 @@ allCells([]).
 
 inBase :- selfCoord(Pos) & cell(Pos, base, _).
 
++!goAdjacentTo(Dest) : selfCoord(Pos) & adjacent(Pos, Dest).
++!goAdjacentTo(Dest) <-
+    !moveTowards(Dest);
+    !goAdjacentTo(Dest).
+
 // Goes to the given destination or to an adjacent cells if the destination is not walkable
 +!goTowards(Dest) : selfCoord(Dest).
 +!goTowards(Dest) : selfCoord(Pos) & adjacent(Pos, Dest) & not(walkable(Dest)).
 +!goTowards(Dest) <-
-    !moveTowards(Dest);
-    !goTowards(Dest).
+    !goAdjacentTo(Dest);
+    !moveTowards(Dest).
 
 // Perform one movement towards the given destination
 +!moveTowards(Dest) : selfCoord(Dest).
