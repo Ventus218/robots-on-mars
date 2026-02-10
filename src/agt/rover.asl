@@ -34,15 +34,11 @@ allCells([]).
 
 /* Plans */
 
-+!init : iAmAScientist <-
++!init : iAmAScientist <- 
     !!depositSamples;
-    !!start.
-+!init <- !!start.
-
-+!start : iAmAScientist <- 
     !!science;
     !!explore.
-+!start <- !!explore.
++!init <- !!explore.
 
 // >>>>>>>>>> EXPLORE SECTION <<<<<<<<<<
 
@@ -60,18 +56,23 @@ allCells([]).
 // Estimating the amount of energy needed to go back to the base plus a safety energy reserve.
 // Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
 // having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
-+battery(B) : not(batteryLow) & selfCoord(Pos) & baseCoord(Base) & estimateBatteryUsage(Pos, Base, E) & batterySafetyReserve(S) & B <= E + S <-
-    +batteryLow;
-    .drop_intention(explore);
-    .drop_intention(science);
-    ?baseCoord(Dest);
++battery(B) : selfCoord(Pos) & baseCoord(Base) & estimateBatteryUsage(Pos, Base, E) & batterySafetyReserve(S) & B <= E + S <-
+    !!goCharge.
++battery(0) <-
+    .drop_all_desires;
+    // .drop_all_intentions;
+    .print("Ran out of battery :(").
+
++!goCharge : not .intend(goCharge) <-
+    .suspend(explore);
+    .suspend(science);
+    .print("Going to base to charge");
     !goToBase;
     !rechargeFully;
-    -batteryLow;
-    !!start.
-+battery(0) <-
-    .drop_all_intentions;
-    .print("Ran out of battery :(").
+    .print("Completed charging");
+    .resume(explore);
+    .resume(science).
++!goCharge.
 
 +!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
     ?rechargeSpeedMs(S);
@@ -83,30 +84,37 @@ allCells([]).
 // >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
 // If we are here we assume that the rover is a Scientist
 
+
++!depositSamples : not(inBase) & not(hasSpaceForSample) <- 
+    .suspend(explore);
+    .suspend(science);
+    .print("Going to base to deposit samples");
+    !goToBase;
+    depositSamplesAction;
+    .print("Samples deposited");
+    .resume(explore);
+    .resume(science).
+    !!depositSamples.
 +!depositSamples : inBase & collectedSamples(S) & S > 0 <- 
     depositSamplesAction;
     !!depositSamples.
 +!depositSamples <- !!depositSamples.
 
-+collectedSamples(C) : not(hasSpaceForSample) <-
-    .drop_intention(explore);
-    .drop_intention(science);
-    !goToBase;
-    !!start.
-
 // There's science work to do right next to me, i'll do it
 +!science : bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
-    .drop_intention(explore);
+    .suspend(explore);
     !doScienceWork(cell(Coord, Terr, TS));
     .wait(10); //perceive does not work;
-    !!start.
+    !!science.
 // There's science work to do i'll move towards it
 +!science : bestScienceWork(cell(Coord, Terr, TS)) <-
-    .drop_intention(explore);
+    .suspend(explore);
     !moveTowards(Coord);
-    !!start.
+    !!science.
 // There's no science work to do right now, i'll keep trying
-+!science <- !!science. 
++!science <- 
+    .resume(explore);
+    !!science. 
 
 bestScienceWork(Cell) :- 
     scienceWorkAt(Cells) &
