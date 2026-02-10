@@ -50,7 +50,7 @@ allCells([]).
 // >>>>>>>>>> EXPLORE SECTION <<<<<<<<<<
 
 +!checkExplore : can(explore) <- 
-    !!explore;
+    !explore;
     !!checkExplore.
 +!checkExplore <- !!checkExplore.
 
@@ -59,6 +59,7 @@ allCells([]).
     ?movementSpeedMs(S);
     .wait(S);
     exploreAction.
++!explore.
 -!explore.
 
 +see(C, Terrain) <-
@@ -125,14 +126,13 @@ needToCharge :-
 // There's science work to do right next to me, i'll do it
 +!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
     !doScienceWork(cell(Coord, Terr, TS));
-    // .wait(10); //perceive does not work;
-    .perceive;
+    .wait(10); //perceive does not work;
     !science.
 // There's science work to do i'll move towards it
 +!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) <-
     !moveTowards(Coord);
     !science.
-// There's no science work to do right now, i'll keep trying
+// There's no science work to do right now.
 +!science.
 
 theresScienceToDo :- .intend(science).
