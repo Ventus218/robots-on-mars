@@ -9,7 +9,7 @@ batterySafetyReserve(10).
 can(explore) :- not(needToCharge) & not(.intend(explore)) & not(iAmAScientist).
 can(explore) :- not(needToCharge) & not(.intend(explore)) & hasSpaceForSample & not(theresScienceToDo).
 can(science) :- not(needToCharge) & not(.intend(science)) & hasSpaceForSample.
-can(deposit) :- not(needToCharge) & not(intend(depositSamples)).
+can(deposit) :- not(needToCharge) & not(.intend(deposit)).
 
 // Think about this as a belief, it's just a way to initialize it as soon as it's needed.
 +!cellMap(M) : cellMapInstance(M).
