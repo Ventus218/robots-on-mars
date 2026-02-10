@@ -7,7 +7,7 @@ mineSampleSpeedMs(3000).
 collectSampleSpeedMs(3000).
 batterySafetyReserve(10).
 can(explore) :- not(needToCharge) & not(.intend(explore)) & not(iAmAScientist).
-can(explore) :- not(needToCharge) & not(.intend(explore)) & not(theresScienceToDo) & hasSpaceForSample.
+can(explore) :- not(needToCharge) & not(.intend(explore)) & hasSpaceForSample & not(theresScienceToDo).
 can(science) :- not(needToCharge) & not(.intend(science)) & hasSpaceForSample.
 can(deposit) :- not(needToCharge) & not(intend(depositSamples)).
 
@@ -104,18 +104,18 @@ needToCharge :-
 // If we are here we assume that the rover is a Scientist
 
 +!checkDeposit : can(deposit) <-
-    !depositSamples;
+    !deposit;
     !!checkDeposit.
 +!checkDeposit <- !!checkDeposit.
 
-+!depositSamples : can(deposit) & not(inBase) & not(hasSpaceForSample) <- 
++!deposit : can(deposit) & not(inBase) & not(hasSpaceForSample) <- 
     ?baseCoord(Base);
     !moveTowards(Base);
-    !depositSamples.
-+!depositSamples : can(deposit) & inBase & collectedSamples(S) & S > 0 <- 
+    !deposit.
++!deposit : can(deposit) & inBase & collectedSamples(S) & S > 0 <- 
     depositSamplesAction;
-    !depositSamples.
-+!depositSamples.
+    !deposit.
++!deposit.
 
 +!checkScience : can(science) & theresScienceToDo <- 
     !science;
