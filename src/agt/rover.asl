@@ -6,6 +6,9 @@ rechargeSpeedMs(2000).
 mineSampleSpeedMs(3000).
 collectSampleSpeedMs(3000).
 batterySafetyReserve(10).
+can(explore) :- not(must(science)) & not(must(deposit)) & not(must(charge)).
+can(science) :- not(must(deposit)) & not(must(charge)).
+can(deposit) :- not(must(charge)).
 
 // Think about this as a belief, it's just a way to initialize it as soon as it's needed.
 +!cellMap(M) : cellMapInstance(M).
@@ -42,11 +45,13 @@ allCells([]).
 
 // >>>>>>>>>> EXPLORE SECTION <<<<<<<<<<
 
-+!explore <- 
++!explore : can(explore) <-
+    .print("exploring");
     ?movementSpeedMs(S);
     .wait(S);
     exploreAction;
     !!explore.
++!explore <- !!explore.
 -!explore <- !!explore.
 
 +see(C, Terrain) <-
@@ -57,22 +62,20 @@ allCells([]).
 // Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
 // having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
 +battery(B) : selfCoord(Pos) & baseCoord(Base) & estimateBatteryUsage(Pos, Base, E) & batterySafetyReserve(S) & B <= E + S <-
-    !!goCharge.
+    !!charge.
 +battery(0) <-
     .drop_all_desires;
     // .drop_all_intentions;
     .print("Ran out of battery :(").
 
-+!goCharge : not .intend(goCharge) <-
-    .suspend(explore);
-    .suspend(science);
++!charge : not .intend(charge) <-
+    -+must(charge);
     .print("Going to base to charge");
     !goToBase;
     !rechargeFully;
     .print("Completed charging");
-    .resume(explore);
-    .resume(science).
-+!goCharge.
+    -must(charge).
++!charge.
 
 +!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
     ?rechargeSpeedMs(S);
@@ -84,37 +87,40 @@ allCells([]).
 // >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
 // If we are here we assume that the rover is a Scientist
 
-
-+!depositSamples : not(inBase) & not(hasSpaceForSample) <- 
-    .suspend(explore);
-    .suspend(science);
++!depositSamples : can(deposit) & not(inBase) & not(hasSpaceForSample) <- 
+    -+must(deposit);
     .print("Going to base to deposit samples");
     !goToBase;
     depositSamplesAction;
     .print("Samples deposited");
-    .resume(explore);
-    .resume(science).
+    -must(deposit);
     !!depositSamples.
-+!depositSamples : inBase & collectedSamples(S) & S > 0 <- 
++!depositSamples : can(deposit) & inBase & collectedSamples(S) & S > 0 <- 
+    -+must(deposit);
     depositSamplesAction;
+    .print("Samples deposited");
+    -must(deposit);
     !!depositSamples.
 +!depositSamples <- !!depositSamples.
 
 // There's science work to do right next to me, i'll do it
-+!science : bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
-    .suspend(explore);
++!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
+    -+must(science);
+    .wait(not(.intend(explore)));
     !doScienceWork(cell(Coord, Terr, TS));
     .wait(10); //perceive does not work;
     !!science.
 // There's science work to do i'll move towards it
-+!science : bestScienceWork(cell(Coord, Terr, TS)) <-
-    .suspend(explore);
++!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) <-
+    -+must(science);
+    .wait(not(.intend(explore)));
     !moveTowards(Coord);
     !!science.
 // There's no science work to do right now, i'll keep trying
-+!science <- 
-    .resume(explore);
++!science : can(science) <- 
+    -must(science);
     !!science. 
++!science <- !!science.
 
 bestScienceWork(Cell) :- 
     scienceWorkAt(Cells) &
