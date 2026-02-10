@@ -1,7 +1,11 @@
 package src.model;
 
 public sealed interface Action
-        permits Action.Move, Action.MineSample, Action.CollectSample, Action.DepositSamples, Action.Recharge {
+        permits Action.Explore, Action.Move, Action.MineSample, Action.CollectSample, Action.DepositSamples,
+        Action.Recharge {
+
+    public record Explore(Rover rover) implements Action {
+    }
 
     public record Move(Rover rover, Direction direction) implements Action {
     }

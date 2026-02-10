@@ -1,10 +1,6 @@
 // Agent alice in project robotsOnMars
 
 /* Initial beliefs and rules */
-movementSpeedMs(1000).
-rechargeSpeedMs(2000).
-mineSampleSpeedMs(3000).
-collectSampleSpeedMs(3000).
 batterySafetyReserve(10).
 can(explore) :- not(needToCharge) & not(.intend(explore)) & not(iAmAScientist).
 can(explore) :- not(needToCharge) & not(.intend(explore)) & hasSpaceForSample & not(theresScienceToDo).
@@ -56,8 +52,6 @@ allCells([]).
 
 +!explore : can(explore) <-
     .print("exploring");
-    ?movementSpeedMs(S);
-    .wait(S);
     exploreAction.
 +!explore.
 -!explore.
@@ -95,8 +89,6 @@ needToCharge :-
     .print("Completed charging").
 
 +!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
-    ?rechargeSpeedMs(S);
-    .wait(S);
     recharge;
     !rechargeFully.
 +!rechargeFully.
@@ -154,12 +146,8 @@ selectScienceWork(cell(Coord, Terr, TS), [cell(Coord, Terr, TS) | T]) :-
 selectScienceWork(Cell, [_ | T]) :- selectScienceWork(Cell, T).
 
 +!doScienceWork(cell(Coord, sample, _)) : hasSpaceForSample <-
-    ?collectSampleSpeedMs(S);
-    .wait(S);
     collectSampleAction(Coord).
 +!doScienceWork(cell(Coord, miningSpot, _)) <-
-    ?mineSampleSpeedMs(S);
-    .wait(S);
     mineSampleAction(Coord).
 
 hasSpaceForSample :- collectedSamples(S) & samplesCapacity(C) & S < C.
@@ -227,8 +215,6 @@ inBase :- selfCoord(Pos) & cell(Pos, base, _).
     ?selfCoord(Pos);
     .findall(tuple(D, Dir), direction(Dir) & canMove(Dir) & applyDir(Pos, Dir, C) & distance(C, Dest, D), AvailableDirs);
     .min(AvailableDirs, tuple(_, Dir));
-    ?movementSpeedMs(S);
-    .wait(S);
     !safeMove(Dir).
 
 +!safeMove(Dir) <- move(Dir).

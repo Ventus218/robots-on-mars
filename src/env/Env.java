@@ -18,35 +18,33 @@ public class Env extends Environment {
     private static Env instance;
 
     private Logger logger = Logger.getLogger("robotsOnMars." + Env.class.getName());
-    private final int MARS_SIZE = 35;
-    private final float MARS_OBSTACLES_DENSITY = 0.05f;
-    private final float MARS_SAMPLES_DENSITY = 0.005f;
-    private final float MARS_MINING_SPOTS_DENSITY = 0.01f;
-    private final int MARS_BASE_SIZE = 3;
-    private final int MARS_BASE_ANTENNA_RANGE = 7;
-    private final int ROVER_BATTERY_CAPACITY = 100;
-    private final int ROVER_CAMERA_RANGE = 3;
-    private final int ROVER_ANTENNA_RANGE = 5;
-    private final int SCIENTIST_SAMPLES_CAPACITY = 2;
-    private final int SCIENTIST_MINING_SAMPLE_ENERGY_COST = 10;
 
     private Mars mars = new Mars(
-            MARS_SIZE,
-            MARS_OBSTACLES_DENSITY,
-            MARS_SAMPLES_DENSITY,
-            MARS_MINING_SPOTS_DENSITY,
-            MARS_BASE_SIZE,
-            MARS_BASE_ANTENNA_RANGE);
+            Config.MARS_SIZE,
+            Config.MARS_OBSTACLES_DENSITY,
+            Config.MARS_SAMPLES_DENSITY,
+            Config.MARS_MINING_SPOTS_DENSITY,
+            Config.MARS_BASE_SIZE,
+            Config.MARS_BASE_ANTENNA_RANGE);
 
     private Rover simpleRoverNamed(String name) {
-        return new SimpleRover(name, ROVER_BATTERY_CAPACITY, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE,
-                ROVER_ANTENNA_RANGE);
+        return new SimpleRover(
+                name,
+                Config.ROVER_BATTERY_CAPACITY,
+                Config.ROVER_BATTERY_CAPACITY,
+                Config.ROVER_CAMERA_RANGE,
+                Config.ROVER_ANTENNA_RANGE);
     }
 
     private Rover scientistRoverNamed(String name) {
-        return new ScientistRover(name, ROVER_BATTERY_CAPACITY, ROVER_BATTERY_CAPACITY, ROVER_CAMERA_RANGE,
-                ROVER_ANTENNA_RANGE,
-                SCIENTIST_SAMPLES_CAPACITY, SCIENTIST_MINING_SAMPLE_ENERGY_COST);
+        return new ScientistRover(
+                name,
+                Config.ROVER_BATTERY_CAPACITY,
+                Config.ROVER_BATTERY_CAPACITY,
+                Config.ROVER_CAMERA_RANGE,
+                Config.ROVER_ANTENNA_RANGE,
+                Config.SCIENTIST_SAMPLES_CAPACITY,
+                Config.SCIENTIST_MINING_SAMPLE_ENERGY_COST);
     }
 
     /** Called before the MAS execution with the args informed in .mas2j */
@@ -75,34 +73,46 @@ public class Env extends Environment {
         assert !agName.equals("base");
         final var rover = spawnIfMissing(agName);
         Optional<Action> actionToPerform = Optional.empty();
+        int timeToSleepMs = 0;
         if (action.getFunctor().equals(Lit.saveCellAction.getFunctor())) {
             final var coord = Lit.toCoordinates(action.getTerm(0));
             final var terrain = Lit.toTerrain(action.getTerm(1));
             mars.updateMarsViewOf(rover, coord, terrain);
         } else if (action.equals(Lit.exploreAction)) {
-            final var direction = mars.bestExploreDirections(rover).stream()
-                    .findFirst()
-                    .orElse(Direction.random());
-            actionToPerform = Optional.of(new Action.Move(rover, direction));
+            actionToPerform = Optional.of(new Action.Explore(rover));
+            timeToSleepMs = Config.MOVEMENT_DURATION_MS;
         } else if (action.getFunctor().equals(Lit.moveAction.getFunctor())) {
             final var direction = Lit.toDirection(action.getTerm(0));
             actionToPerform = Optional.of(new Action.Move(rover, direction));
+            timeToSleepMs = Config.MOVEMENT_DURATION_MS;
         } else if (action.getFunctor().equals(Lit.rechargeAction.getFunctor())) {
             actionToPerform = Optional.of(new Action.Recharge(rover));
+            timeToSleepMs = Config.RECHARGE_DURATION_MS;
         } else if (action.getFunctor().equals(Lit.mineSampleAction.getFunctor())) {
             final var coord = Lit.toCoordinates(action.getTerm(0));
             actionToPerform = Optional.of(new Action.MineSample((ScientistRover) rover, coord));
+            timeToSleepMs = Config.MINE_SAMPLE_DURATION_MS;
         } else if (action.getFunctor().equals(Lit.collectSampleAction.getFunctor())) {
             final var coord = Lit.toCoordinates(action.getTerm(0));
             actionToPerform = Optional.of(new Action.CollectSample((ScientistRover) rover, coord));
+            timeToSleepMs = Config.COLLECT_SAMPLE_DURATION_MS;
         } else if (action.getFunctor().equals(Lit.depositSamplesAction.getFunctor())) {
             actionToPerform = Optional.of(new Action.DepositSamples((ScientistRover) rover));
+            timeToSleepMs = Config.DEPOSIT_SAMPLES_DURATION_MS;
         } else {
             logger.info("executing: " + action + ", but not implemented!");
         }
+        final int timeToSleepMsFinal = timeToSleepMs;
 
         return actionToPerform.stream()
-                .map(a -> mars.performAction(a))
+                .map(a -> {
+                    try {
+                        Thread.sleep(timeToSleepMsFinal);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return mars.performAction(a);
+                })
                 .peek(result -> informAgsEnvironmentChanged())
                 .findFirst()
                 .orElse(true);

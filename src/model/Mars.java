@@ -191,6 +191,7 @@ public class Mars {
 
     synchronized public boolean performAction(Action action) {
         final var res = switch (action) {
+            case Action.Explore(var r) -> explore(r);
             case Action.Move(var r, var dir) -> moveRover(r, dir);
             case Action.Recharge(var r) -> updateRoverBattery(r);
             case Action.CollectSample(var r, var coord) -> collectSample(r, coord);
@@ -200,6 +201,13 @@ public class Mars {
         };
         informListeners();
         return res;
+    }
+
+    synchronized private boolean explore(Rover rover) {
+        final var direction = bestExploreDirections(rover).stream()
+                .findFirst()
+                .orElse(Direction.random());
+        return moveRover(rover, direction);
     }
 
     synchronized private boolean updateRoverBattery(Rover rover) {
