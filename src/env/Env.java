@@ -15,8 +15,6 @@ import src.view.ViewModel;
 import src.model.*;
 
 public class Env extends Environment {
-    private static Env instance;
-
     private Logger logger = Logger.getLogger("robotsOnMars." + Env.class.getName());
 
     private Mars mars = new Mars(
@@ -51,7 +49,6 @@ public class Env extends Environment {
     @Override
     public void init(String[] args) {
         super.init(args);
-        Env.instance = this;
         try {
             addPercept(ASSyntax.parseLiteral("percept(" + args[0] + ")"));
         } catch (ParseException e) {
@@ -206,10 +203,6 @@ public class Env extends Environment {
         public static final Literal left = ASSyntax.createAtom("left");
         public static final Literal right = ASSyntax.createAtom("right");
 
-        public static Literal fromBool(boolean b) {
-            return b ? Literal.LTrue : Literal.LFalse;
-        }
-
         public static Terrain toTerrain(Term t) {
             return switch (t.toString()) {
                 case "empty" -> new Terrain.Empty();
@@ -255,21 +248,5 @@ public class Env extends Environment {
                 throw new IllegalArgumentException();
             }
         }
-
-        public static long toLong(Term t) {
-            try {
-                return (long) ((NumberTerm) t).solve();
-            } catch (NoValueException e) {
-                throw new IllegalArgumentException();
-            }
-        }
-    }
-
-    public static Env instance() {
-        return Env.instance;
-    }
-
-    public Mars mars() {
-        return mars;
     }
 }

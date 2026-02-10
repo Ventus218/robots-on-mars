@@ -1,5 +1,3 @@
-// Agent alice in project robotsOnMars
-
 /* Initial beliefs and rules */
 batterySafetyReserve(10).
 can(explore) :- not(needToCharge) & not(.intend(explore)) & not(iAmAScientist).
