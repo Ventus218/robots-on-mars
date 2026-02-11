@@ -114,7 +114,7 @@ needToCharge :-
 // There's science work to do right next to me, i'll do it
 +!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
     !doScienceWork(cell(Coord, Terr, TS));
-    .wait(10); //perceive does not work;
+    .wait(cell(Coord, empty, _) | cell(Coord, sample, _));
     !science.
 // There's science work to do i'll move towards it
 +!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) <-
