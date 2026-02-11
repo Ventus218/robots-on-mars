@@ -324,6 +324,12 @@ public class Mars {
         informListeners();
     }
 
+    synchronized public void updateMarsViewOf(HasViewOfMars h, Map<Coordinates, Terrain> updates) {
+        h.marsView().updateView(updates.entrySet().stream()
+                .collect(Collectors.toMap(e -> e.getKey(), e -> new TerrainView.Known(e.getValue()))));
+        informListeners();
+    }
+
     synchronized public Map<Rover, Coordinates> roverCoordinates() {
         return Map.copyOf(roverCoordinates);
     }

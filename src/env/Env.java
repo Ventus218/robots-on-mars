@@ -16,6 +16,7 @@ import src.model.*;
 
 public class Env extends Environment {
     private Logger logger = Logger.getLogger("robotsOnMars." + Env.class.getName());
+    private static Env instance;
 
     private Mars mars = new Mars(
             Config.MARS_SIZE,
@@ -53,6 +54,7 @@ public class Env extends Environment {
     @Override
     public void init(String[] args) {
         super.init(args);
+        Env.instance = this;
         try {
             addPercept(ASSyntax.parseLiteral("percept(" + args[0] + ")"));
         } catch (ParseException e) {
@@ -256,5 +258,21 @@ public class Env extends Environment {
                 throw new IllegalArgumentException();
             }
         }
+
+        public static long toLong(Term t) {
+            try {
+                return (long) ((NumberTerm) t).solve();
+            } catch (NoValueException e) {
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    public static Env instance() {
+        return Env.instance;
+    }
+
+    public Mars mars() {
+        return mars;
     }
 }

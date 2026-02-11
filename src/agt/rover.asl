@@ -179,22 +179,25 @@ extractSecondFromTuple([tuple(A, B) | Tail], [B | Rest]) :-
     ?allCells(Cells);
     .send(R, achieve, mergeMarsView(Cells));
     // Reschedule plan
-    // .random(Rng);
-    // .wait(Rng * 1000);
-    .wait(2000);
+    .random(Rng);
+    .wait(Rng * 1000);
+    .wait(1000);
     !!sendKnowledge(R).
 +!sendKnowledge(R).
 
-+!mergeMarsView([Cell | Tail]) <-
-    !updateCellIfNewer(Cell);
-    !mergeMarsView(Tail).
-+!mergeMarsView([]).
+// +!mergeMarsView([Cell | Tail]) <-
+//     !updateCellIfNewer(Cell);
+//     !mergeMarsView(Tail).
+// +!mergeMarsView([]).
+// // If i have newer data about that cell i will do nothing.
+// +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
+// // Otherwise i will update my knowledge about that cell.
+// +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
+//     !saveCell(coord(X, Y), Terrain, Timestamp).
 
-// If i have newer data about that cell i will do nothing.
-+!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
-// Otherwise i will update my knowledge about that cell.
-+!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
-    !saveCell(coord(X, Y), Terrain, Timestamp).
++!mergeMarsView(Cells) <-
+    !cellMap(M);
+    src.agt.MergeKnowledgeAction(M, Cells).
 
 // >>>>>>>>>> UTILITIES SECTION <<<<<<<<<<
 
