@@ -216,11 +216,11 @@ inBase :- selfCoord(Pos) & cell(Pos, base, _).
 
 // Perform one movement towards the given destination
 +!moveTowards(Dest) : selfCoord(Dest).
-// // If i'm not adjacent to Dest i will perform a random movement with a probability of 1/10
-// +!moveTowards(Dest) : selfCoord(Pos) & not(adjacent(Pos, Dest)) & .random(R) & R <= 0.1 <-
-//     .findall(Dir, availableDirections(Dir), Dirs);
-//     .random(Dirs, Dir);
-//     !safeMove(Dir).
+// If i'm not adjacent to Dest i will perform a random movement with a probability of 1/10
++!moveTowards(Dest) : selfCoord(Pos) & not(adjacent(Pos, Dest)) & .random(R) & R <= 0.1 <-
+    .findall(Dir, availableDirections(Dir), Dirs);
+    .random(Dirs, Dir);
+    !safeMove(Dir).
 // Decides what's the best direction to follow to reach Dest and moves to it
 +!moveTowards(Dest) <-
     ?selfCoord(Pos);
