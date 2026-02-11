@@ -12,11 +12,14 @@ can(deposit) :- not(needToCharge) & not(.intend(deposit)).
     .map.create(M);
     +cellMapInstance(M).
 
-+!saveCell(Coord, Terrain, Timestamp) <-
+// Writer proxy on the map
++cell(Coord, Terrain, Timestamp) <-
     !cellMap(M);
     saveCellAction(Coord, Terrain, Timestamp);
-    .map.put(M, Coord, data(Terrain, Timestamp)).
+    .map.put(M, Coord, data(Terrain, Timestamp));
+    -cell(Coord, Terrain, Timestamp).
 
+// Reader proxy on the map
 cell(Coord, Terrain, Timestamp) :-
     cellMapInstance(M) &
     .map.get(M, Coord, data(Terrain, Timestamp)).
@@ -55,7 +58,7 @@ allCells([]).
 -!explore.
 
 +see(C, Terrain) <-
-    !saveCell(C, Terrain, system.time).
+    +cell(C, Terrain, system.time).
 
 // >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
 needToCharge :- .intend(charge).
@@ -193,7 +196,7 @@ extractSecondFromTuple([tuple(A, B) | Tail], [B | Rest]) :-
 // +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) : cell(coord(X, Y), _, Timestamp2) & Timestamp <= Timestamp2.
 // // Otherwise i will update my knowledge about that cell.
 // +!updateCellIfNewer(cell(coord(X, Y), Terrain, Timestamp)) <-
-//     !saveCell(coord(X, Y), Terrain, Timestamp).
+//     +cell(coord(X, Y), Terrain, Timestamp).
 
 +!mergeMarsView(Cells) <-
     !cellMap(M);
