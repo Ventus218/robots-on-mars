@@ -18,6 +18,7 @@ MAS robotsOnMars {
         base base;
 
         tonyS rover;
+        frank rover;
         bill rover;
 
     aslSourcePath: "src/agt";

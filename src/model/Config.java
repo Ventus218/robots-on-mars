@@ -5,7 +5,7 @@ public final class Config {
     public static final float MARS_OBSTACLES_DENSITY = 0.05f;
     public static final float MARS_SAMPLES_DENSITY = 0.005f;
     public static final float MARS_MINING_SPOTS_DENSITY = 0.01f;
-    public static final int MARS_BASE_SIZE = 3;
+    public static final int MARS_BASE_SIZE = 4;
     public static final int MARS_BASE_ANTENNA_RANGE = 7;
     public static final int ROVER_BATTERY_CAPACITY = 100;
     public static final int ROVER_CAMERA_RANGE = 3;
