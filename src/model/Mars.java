@@ -118,7 +118,7 @@ public class Mars {
     synchronized private boolean moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
         final var newCoordinates = coordinates.apply(motion);
-        if (canBeMovedOn(newCoordinates) & rover.move()) {
+        if (canBeMovedOn(newCoordinates) && rover.move()) {
             roverCoordinates.put(rover, newCoordinates);
             return true;
         } else {
