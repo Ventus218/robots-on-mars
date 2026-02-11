@@ -104,6 +104,7 @@ needToCharge :-
     depositSamplesAction;
     !deposit.
 +!deposit.
+-!deposit.
 
 +!checkScience : can(science) & theresScienceToDo <- 
     !science;
@@ -121,6 +122,7 @@ needToCharge :-
     !science.
 // There's no science work to do right now.
 +!science.
+-!science.
 
 theresScienceToDo :- .intend(science).
 theresScienceToDo :- bestScienceWork(_).
