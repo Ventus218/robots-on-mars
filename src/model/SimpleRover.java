@@ -53,7 +53,12 @@ public class SimpleRover implements Rover {
 
     @Override
     public boolean move() {
-        return updateBatteryWith(-movementEnergyCost);
+        if (battery() - movementEnergyCost < 0) {
+            return false;
+        } else {
+            updateBatteryWith(-movementEnergyCost);
+            return true;
+        }
     }
 
     @Override
@@ -61,10 +66,9 @@ public class SimpleRover implements Rover {
         updateBatteryWith(rechargeEnergyAmount);
     }
 
-    public boolean updateBatteryWith(int update) {
+    public void updateBatteryWith(int update) {
         battery = battery + update;
         battery = Math.min(batteryCapacity, battery);
         battery = Math.max(0, battery);
-        return battery >= 0;
     }
 }

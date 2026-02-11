@@ -74,7 +74,12 @@ public class ScientistRover implements Rover {
     }
 
     public boolean mineSample() {
-        return rover.updateBatteryWith(-miningSampleEnergyCost);
+        if (rover.battery() - miningSampleEnergyCost() < 0) {
+            return false;
+        } else {
+            rover.updateBatteryWith(-miningSampleEnergyCost);
+            return true;
+        }
     }
 
     public void depositSamples() {

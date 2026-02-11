@@ -28,6 +28,9 @@ dependencies {
 
     // to use locally installed jars:
     implementation fileTree(dir: 'lib', include: '*.jar')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 sourceSets {
@@ -36,10 +39,23 @@ sourceSets {
             srcDir 'src/java'
             srcDir 'src/env'
             srcDir '.' // some old jason apps store .java files in project root
+            exclude 'src/test'
         }
         resources {
             srcDir 'resources'
         }
+    }
+    test {
+        java {
+            srcDir 'src/test'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
     }
 }
 
