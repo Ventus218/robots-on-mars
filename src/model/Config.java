@@ -10,6 +10,8 @@ public final class Config {
     public static final int ROVER_BATTERY_CAPACITY = 100;
     public static final int ROVER_CAMERA_RANGE = 3;
     public static final int ROVER_ANTENNA_RANGE = 5;
+    public static final int ROVER_MOVEMENT_ENERGY_COST = 1;
+    public static final int ROVER_CHARGING_ENERGY_AMOUNT = 10;
     public static final int SCIENTIST_SAMPLES_CAPACITY = 4;
     public static final int SCIENTIST_MINING_SAMPLE_ENERGY_COST = 10;
     public static final int MOVEMENT_DURATION_MS = 1000;

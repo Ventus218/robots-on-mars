@@ -118,9 +118,8 @@ public class Mars {
     synchronized private boolean moveRover(Rover rover, Direction motion) {
         final var coordinates = roverCoordinates.get(rover);
         final var newCoordinates = coordinates.apply(motion);
-        if (canBeMovedOn(newCoordinates)) {
+        if (canBeMovedOn(newCoordinates) & rover.move()) {
             roverCoordinates.put(rover, newCoordinates);
-            rover.updateBatteryWith(-1);
             return true;
         } else {
             return false;
@@ -213,7 +212,7 @@ public class Mars {
     synchronized private boolean updateRoverBattery(Rover rover) {
         final var roverCoord = roverCoordinates().get(rover);
         if (terrainAt(roverCoord) instanceof Terrain.Base) {
-            rover.updateBatteryWith(10);
+            rover.recharge();
             return true;
         } else {
             return false;
@@ -332,28 +331,4 @@ public class Mars {
     synchronized public Coordinates baseCenterCoordinates() {
         return baseCenter;
     }
-
-    @Override
-    public String toString() {
-        final var builder = new StringBuilder();
-        for (var y = positiveBound(); y >= negativeBound(); y--) {
-            for (var x = negativeBound(); x <= positiveBound(); x++) {
-                final var coordinates = new Coordinates(x, y);
-                var str = switch (terrain.get(coordinates)) {
-                    case Terrain.Empty() -> "-";
-                    case Terrain.Obstacle() -> "O";
-                    case Terrain.Sample() -> "S";
-                    case Terrain.MiningSpot() -> "X";
-                    case Terrain.Base() -> "B";
-                };
-                if (roverAtCoordinates(coordinates).isPresent()) {
-                    str = "R";
-                }
-                builder.append(str);
-            }
-            builder.append("\n");
-        }
-        return builder.toString();
-    }
-
 }

@@ -6,14 +6,19 @@ public class SimpleRover implements Rover {
     private final int batteryCapacity;
     private final int cameraRange;
     private final int antennaRange;
+    private final int movementEnergyCost;
+    private final int rechargeEnergyAmount;
     private final MarsView marsView = new MarsView();
 
-    public SimpleRover(String name, int battery, int batteryCapacity, int cameraRange, int antennaRange) {
+    public SimpleRover(String name, int battery, int batteryCapacity, int cameraRange, int antennaRange,
+            int movementEnergyCost, int rechargeEnergyAmount) {
         this.name = name;
         this.battery = battery;
         this.batteryCapacity = batteryCapacity;
         this.cameraRange = cameraRange;
         this.antennaRange = antennaRange;
+        this.movementEnergyCost = movementEnergyCost;
+        this.rechargeEnergyAmount = rechargeEnergyAmount;
     }
 
     @Override
@@ -47,9 +52,19 @@ public class SimpleRover implements Rover {
     }
 
     @Override
-    public void updateBatteryWith(int update) {
+    public boolean move() {
+        return updateBatteryWith(-movementEnergyCost);
+    }
+
+    @Override
+    public void recharge() {
+        updateBatteryWith(rechargeEnergyAmount);
+    }
+
+    public boolean updateBatteryWith(int update) {
         battery = battery + update;
         battery = Math.min(batteryCapacity, battery);
         battery = Math.max(0, battery);
+        return battery >= 0;
     }
 }

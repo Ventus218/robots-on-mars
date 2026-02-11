@@ -31,7 +31,9 @@ public class Env extends Environment {
                 Config.ROVER_BATTERY_CAPACITY,
                 Config.ROVER_BATTERY_CAPACITY,
                 Config.ROVER_CAMERA_RANGE,
-                Config.ROVER_ANTENNA_RANGE);
+                Config.ROVER_ANTENNA_RANGE,
+                Config.ROVER_MOVEMENT_ENERGY_COST,
+                Config.ROVER_CHARGING_ENERGY_AMOUNT);
     }
 
     private Rover scientistRoverNamed(String name) {
@@ -41,6 +43,8 @@ public class Env extends Environment {
                 Config.ROVER_BATTERY_CAPACITY,
                 Config.ROVER_CAMERA_RANGE,
                 Config.ROVER_ANTENNA_RANGE,
+                Config.ROVER_MOVEMENT_ENERGY_COST,
+                Config.ROVER_CHARGING_ENERGY_AMOUNT,
                 Config.SCIENTIST_SAMPLES_CAPACITY,
                 Config.SCIENTIST_MINING_SAMPLE_ENERGY_COST);
     }

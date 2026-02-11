@@ -11,5 +11,7 @@ public interface Rover extends HasViewOfMars {
 
     public int antennaRange();
 
-    public void updateBatteryWith(int update);
+    public boolean move();
+
+    public void recharge();
 }

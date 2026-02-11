@@ -8,8 +8,10 @@ public class ScientistRover implements Rover {
     private final int miningSampleEnergyCost;
 
     public ScientistRover(String name, int battery, int batteryCapacity, int cameraRange, int antennaRange,
+            int movementEnergyCost, int rechargeEnergyAmount,
             int samplesCapacity, int miningSampleEnergyCost) {
-        this.rover = new SimpleRover(name, battery, batteryCapacity, cameraRange, antennaRange);
+        this.rover = new SimpleRover(name, battery, batteryCapacity, cameraRange, antennaRange, movementEnergyCost,
+                rechargeEnergyAmount);
         this.samplesCapacity = samplesCapacity;
         this.miningSampleEnergyCost = miningSampleEnergyCost;
     }
@@ -45,8 +47,13 @@ public class ScientistRover implements Rover {
     }
 
     @Override
-    public void updateBatteryWith(int update) {
-        rover.updateBatteryWith(update);
+    public boolean move() {
+        return rover.move();
+    }
+
+    @Override
+    public void recharge() {
+        rover.recharge();
     }
 
     public int carriedSamples() {
@@ -67,12 +74,7 @@ public class ScientistRover implements Rover {
     }
 
     public boolean mineSample() {
-        if (battery() - miningSampleEnergyCost >= 0) {
-            rover.updateBatteryWith(-miningSampleEnergyCost);
-            return true;
-        } else {
-            return false;
-        }
+        return rover.updateBatteryWith(-miningSampleEnergyCost);
     }
 
     public void depositSamples() {
