@@ -68,21 +68,17 @@ public class Mars {
         }
     }
 
-    synchronized private void placeWithDensity(Terrain t, double density) {
-        var toPlace = area() * density;
+    private void placeWithDensity(Terrain t, double density) {
+        List<Coordinates> emptySpots = allCoordinates.stream()
+                .filter(c -> terrain.get(c) instanceof Terrain.Empty)
+                .collect(Collectors.toList());
 
-        while (toPlace > 0) {
-            final var coordinates = new Coordinates(randomInBounds(), randomInBounds());
-            if (terrain.get(coordinates).equals(new Terrain.Empty())) {
-                terrain.put(coordinates, t);
-                toPlace -= 1;
-            }
+        Collections.shuffle(emptySpots, random);
+
+        int toPlace = (int) (area() * density);
+        for (int i = 0; i < Math.min(toPlace, emptySpots.size()); i++) {
+            terrain.put(emptySpots.get(i), t);
         }
-
-    }
-
-    synchronized private int randomInBounds() {
-        return random.nextInt(negativeBound(), positiveBound() + 1);
     }
 
     synchronized private int randomInBaseBounds() {
