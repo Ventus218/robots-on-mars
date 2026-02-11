@@ -22,7 +22,7 @@ public class Mars {
     private final Map<Coordinates, Terrain> terrain = new MapWithDefault<>(new Terrain.Empty());
     private final Map<Rover, Coordinates> roverCoordinates = new HashMap<>();
     private final List<Listener> listeners = new ArrayList<>();
-    private final List<Coordinates> allCoordinates;
+    private final Set<Coordinates> allCoordinates;
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
             int baseSquareSide, int baseAntennaRange) {
@@ -47,7 +47,7 @@ public class Mars {
                 positiveBound()).boxed().toList();
         this.allCoordinates = s.stream()
                 .flatMap(x -> s.stream().map(y -> new Coordinates(x, y)))
-                .toList();
+                .collect(Collectors.toSet());
 
         placeWithDensity(new Terrain.Obstacle(), obstaclesDensity);
         placeWithDensity(new Terrain.MiningSpot(), miningSpotsDensity);
@@ -186,7 +186,7 @@ public class Mars {
                 .toList();
     }
 
-    synchronized public List<Coordinates> allCoordinates() {
+    synchronized public Set<Coordinates> allCoordinates() {
         return allCoordinates;
     }
 

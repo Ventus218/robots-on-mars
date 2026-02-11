@@ -117,7 +117,7 @@ public class MarsTest {
 
         assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
         assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
-        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
+        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Up())));
         assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
         assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
         assertTrue(mars.performAction(new Action.Move(r2, new Direction.Left())));
@@ -131,13 +131,8 @@ public class MarsTest {
         mars.spawn(r1);
         assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
         assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
-        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
-        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
-        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Right())));
-        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Up())));
-        assertTrue(mars.performAction(new Action.Move(r1, new Direction.Up())));
         assertTrue(mars
-                .terrainAt(mars.roverCoordinates().get(r1).apply(new Direction.Up())) instanceof Terrain.Obstacle);
+                .terrainAt(mars.roverCoordinates().get(r1).apply(new Direction.Right())) instanceof Terrain.Obstacle);
     }
 
     @Test
