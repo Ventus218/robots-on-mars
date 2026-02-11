@@ -179,7 +179,9 @@ extractSecondFromTuple([tuple(A, B) | Tail], [B | Rest]) :-
     ?allCells(Cells);
     .send(R, achieve, mergeMarsView(Cells));
     // Reschedule plan
-    .wait(1000);
+    // .random(Rng);
+    // .wait(Rng * 1000);
+    .wait(2000);
     !!sendKnowledge(R).
 +!sendKnowledge(R).
 
@@ -211,16 +213,24 @@ inBase :- selfCoord(Pos) & cell(Pos, base, _).
 
 // Perform one movement towards the given destination
 +!moveTowards(Dest) : selfCoord(Dest).
+// // If i'm not adjacent to Dest i will perform a random movement with a probability of 1/10
+// +!moveTowards(Dest) : selfCoord(Pos) & not(adjacent(Pos, Dest)) & .random(R) & R <= 0.1 <-
+//     .findall(Dir, availableDirections(Dir), Dirs);
+//     .random(Dirs, Dir);
+//     !safeMove(Dir).
+// Decides what's the best direction to follow to reach Dest and moves to it
 +!moveTowards(Dest) <-
     ?selfCoord(Pos);
-    .findall(tuple(D, Dir), direction(Dir) & canMove(Dir) & applyDir(Pos, Dir, C) & distance(C, Dest, D), AvailableDirs);
-    .min(AvailableDirs, tuple(_, Dir));
+    .findall(tuple(D, Dir), availableDirections(Dir) & applyDir(Pos, Dir, C) & distance(C, Dest, D), DirsWithDistanceToDest);
+    .min(DirsWithDistanceToDest, tuple(_, Dir));
     !safeMove(Dir).
 
 +!safeMove(Dir) <- move(Dir).
 -!safeMove(Dir).
 
 canMove(Dir) :- selfCoord(Pos) & applyDir(Pos, Dir, C) & walkable(C).
+
+availableDirections(Dir) :- direction(Dir) & canMove(Dir).
 
 direction(up).
 direction(down).
