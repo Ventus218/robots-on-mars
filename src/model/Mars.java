@@ -3,6 +3,7 @@ package src.model;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import src.utils.MapWithDefault;
 import src.utils.Tuple;
@@ -21,6 +22,7 @@ public class Mars {
     private final Map<Coordinates, Terrain> terrain = new MapWithDefault<>(new Terrain.Empty());
     private final Map<Rover, Coordinates> roverCoordinates = new HashMap<>();
     private final List<Listener> listeners = new ArrayList<>();
+    private final Set<Coordinates> allCoordinates;
 
     public Mars(int squareSide, double obstaclesDensity, double samplesDensity, double miningSpotsDensity,
             int baseSquareSide, int baseAntennaRange) {
@@ -40,6 +42,12 @@ public class Mars {
                 terrain.put(new Coordinates(x, y), new Terrain.Base());
             }
         }
+
+        final var s = IntStream.rangeClosed(negativeBound(),
+                positiveBound()).boxed().toList();
+        this.allCoordinates = s.stream()
+                .flatMap(x -> s.stream().map(y -> new Coordinates(x, y)))
+                .collect(Collectors.toUnmodifiableSet());
 
         placeWithDensity(new Terrain.Obstacle(), obstaclesDensity);
         placeWithDensity(new Terrain.MiningSpot(), miningSpotsDensity);
@@ -159,7 +167,7 @@ public class Mars {
                 .map(c -> knownCoord.contains(c))
                 .anyMatch(hasKnownNeighbour -> hasKnownNeighbour);
 
-        final var unknownCoord = allCoordinates().stream()
+        final var unknownCoord = allCoordinates.stream()
                 .filter(c -> !knownCoord.contains(c) && isBorder.apply(c))
                 .toList();
 
@@ -182,14 +190,8 @@ public class Mars {
                 .toList();
     }
 
-    synchronized private Set<Coordinates> allCoordinates() {
-        final var result = new HashSet<Coordinates>();
-        for (var x = negativeBound(); x <= positiveBound(); x++) {
-            for (var y = negativeBound(); y <= positiveBound(); y++) {
-                result.add(new Coordinates(x, y));
-            }
-        }
-        return result;
+    synchronized public Set<Coordinates> allCoordinates() {
+        return allCoordinates;
     }
 
     synchronized public boolean performAction(Action action) {

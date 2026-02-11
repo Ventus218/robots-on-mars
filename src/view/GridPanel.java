@@ -84,39 +84,36 @@ class GridPanel extends JPanel implements ViewModel.Listener {
             roversToDisplay.putAll(mars.roverCoordinates().entrySet().stream()
                     .collect(Collectors.toMap(e -> e.getValue(), e -> e.getKey())));
         }
-        for (var x = mars.negativeBound(); x <= mars.positiveBound(); x++) {
-            for (var y = mars.negativeBound(); y <= mars.positiveBound(); y++) {
-                var cellData = new CellData(Color.GRAY, null, null);
-                final var coordinates = new Coordinates(x, y);
-                if (knownArea.keySet().contains(coordinates)) {
-                    final var terrain = knownArea.get(coordinates);
-                    cellData = cellData.withColor(terrainColor);
-                    switch (terrain) {
-                        case Terrain.Base() -> cellData = cellData.withImage(baseImg);
-                        case Terrain.Obstacle() -> cellData = cellData.withImage(obstacleImg);
-                        case Terrain.Sample() -> cellData = cellData.withImage(sampleImg);
-                        case Terrain.MiningSpot() -> cellData = cellData.withImage(miningSpotImg);
-                        case Terrain.Empty() -> {
-                        }
+        mars.allCoordinates().forEach(coordinates -> {
+            var cellData = new CellData(Color.GRAY, null, null);
+            if (knownArea.keySet().contains(coordinates)) {
+                final var terrain = knownArea.get(coordinates);
+                cellData = cellData.withColor(terrainColor);
+                switch (terrain) {
+                    case Terrain.Base() -> cellData = cellData.withImage(baseImg);
+                    case Terrain.Obstacle() -> cellData = cellData.withImage(obstacleImg);
+                    case Terrain.Sample() -> cellData = cellData.withImage(sampleImg);
+                    case Terrain.MiningSpot() -> cellData = cellData.withImage(miningSpotImg);
+                    case Terrain.Empty() -> {
                     }
-                }
-                if (antennasToDisplay.contains(coordinates)) {
-                    cellData = cellData.withOverlay(antennaOverlayColor);
-                }
-                if (roversToDisplay.containsKey(coordinates)) {
-                    final var rover = roversToDisplay.get(coordinates);
-                    if (rover instanceof SimpleRover) {
-                        cellData = cellData.withImage(simpleRoverImg);
-                    } else {
-                        cellData = cellData.withImage(scientistRoverImg);
-                    }
-                }
-                if (!cells.getOrDefault(coordinates, new CellData(null, null, null)).equals(cellData)) {
-                    changes.put(coordinates, cellData);
-                    cells.put(coordinates, cellData);
                 }
             }
-        }
+            if (antennasToDisplay.contains(coordinates)) {
+                cellData = cellData.withOverlay(antennaOverlayColor);
+            }
+            if (roversToDisplay.containsKey(coordinates)) {
+                final var rover = roversToDisplay.get(coordinates);
+                if (rover instanceof SimpleRover) {
+                    cellData = cellData.withImage(simpleRoverImg);
+                } else {
+                    cellData = cellData.withImage(scientistRoverImg);
+                }
+            }
+            if (!cells.getOrDefault(coordinates, new CellData(null, null, null)).equals(cellData)) {
+                changes.put(coordinates, cellData);
+                cells.put(coordinates, cellData);
+            }
+        });
 
         updateCanvas();
         repaint();
