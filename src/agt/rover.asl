@@ -48,7 +48,7 @@ allCells([]).
     !!checkExplore.
 +!checkExplore <- !!checkExplore.
 
-+!explore : can(explore) <-
++!explore : can(explore) & not(exploredEverywhere) <-
     .print("exploring");
     exploreAction.
 +!explore.
@@ -62,6 +62,7 @@ allCells([]).
 // Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
 // having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
 needToCharge :- .intend(charge).
+needToCharge :- exploredEverywhere & not(theresScienceToDo) & battery(B) & batteryCapacity(C) & B < C.
 needToCharge :- 
     selfCoord(Pos) & 
     baseCoord(Base) & 
@@ -71,7 +72,9 @@ needToCharge :-
     B <= E + S.
 
 +!checkBattery : needToCharge <-
+    .print("Going to base to charge");
     !charge;
+    .print("Completed charging");
     !!checkBattery.
 +!checkBattery <- !!checkBattery.
 
@@ -81,10 +84,8 @@ needToCharge :-
     .print("Ran out of battery :(").
 
 +!charge <-
-    .print("Going to base to charge");
     !goToBase;
-    !rechargeFully;
-    .print("Completed charging").
+    !rechargeFully.
 
 +!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
     recharge;

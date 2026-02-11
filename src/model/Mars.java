@@ -147,6 +147,10 @@ public class Mars {
         return roverCoord.distanceTo(baseCenter) <= rover.antennaRange();
     }
 
+    synchronized public boolean exploredEverywhere(Rover rover) {
+        return rover.marsView().knownTerrain().size() == area();
+    }
+
     synchronized public List<Direction> bestExploreDirections(Rover rover) {
         final var roverCoord = roverCoordinates().get(rover);
         final var knownCoord = rover.marsView().knownTerrain().keySet();

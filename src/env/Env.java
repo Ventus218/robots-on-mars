@@ -165,6 +165,10 @@ public class Env extends Environment {
                 percepts.add(Lit.toInRange("base"));
             }
 
+            if (mars.exploredEverywhere(rover)) {
+                percepts.add(ASSyntax.createLiteral("exploredEverywhere"));
+            }
+
             if (rover instanceof ScientistRover scientist) {
                 percepts.add(ASSyntax.createLiteral("iAmAScientist"));
                 percepts.add(
