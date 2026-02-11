@@ -58,9 +58,6 @@ allCells([]).
     !saveCell(C, Terrain, system.time).
 
 // >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
-// Estimating the amount of energy needed to go back to the base plus a safety energy reserve.
-// Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
-// having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
 needToCharge :- .intend(charge).
 needToCharge :- exploredEverywhere & not(theresScienceToDo) & battery(B) & batteryCapacity(C) & B < C.
 needToCharge :- 
@@ -80,7 +77,6 @@ needToCharge :-
 
 +battery(0) <-
     .drop_all_desires;
-    // .drop_all_intentions;
     .print("Ran out of battery :(").
 
 +!charge <-
@@ -151,6 +147,9 @@ selectScienceWork(Cell, [_ | T]) :- selectScienceWork(Cell, T).
 
 hasSpaceForSample :- collectedSamples(S) & samplesCapacity(C) & S < C.
 
+// Estimating the amount of energy needed to go From a position To another.
+// Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
+// having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
 estimateBatteryUsage(From, To, math.sqrt((D*D) / 2) * 2) :- distance(From, To, D).
 
 scienceBatteryCost(miningSpot, Cost) :- miningBatteryCost(Cost).
