@@ -116,6 +116,7 @@ batteryLow :-
     // } else {
     //     .wait(cell(Coord, sample, _));
     // }.
+    .wait(10). // Don't know why but perceive and even the code above do not work..
 // There's science work to do i'll move towards it
 +!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) <-
     !moveTowards(Coord).
