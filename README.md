@@ -613,7 +613,7 @@ allCells([]).
 The `saveCellAction` is used by the rover to keep the model in sync with its
 belief base, allowing the GUI to accurately display each rover’s knowledge.
 
-### Testing
+## Testing
 
 Randomness plays a huge role in the rovers behaviour and therefore testing is
 quite difficult.
