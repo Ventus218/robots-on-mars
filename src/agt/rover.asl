@@ -49,6 +49,7 @@ allCells([]).
 +see(C, Terrain) <-
     +cell(C, Terrain, system.time).
 
+// >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
 batteryLow :- .intend(charge).
 batteryLow :-
     selfCoord(Pos) & 
@@ -58,7 +59,6 @@ batteryLow :-
     batterySafetyReserve(S) & 
     B <= E + S.
 
-// >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
 +battery(B) : batteryLow & not(.intend(charge)) <-
     .drop_desire(loop);
     .drop_desire(fastDeposit);
