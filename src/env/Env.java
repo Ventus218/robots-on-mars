@@ -171,6 +171,9 @@ public class Env extends Environment {
                 percepts.add(ASSyntax.createLiteral("exploredEverywhere"));
             }
 
+            percepts.add(ASSyntax.createLiteral("randomMovementProbability",
+                    ASSyntax.createNumber(Config.RANDOM_MOVEMENT_PROBABILITY)));
+
             if (rover instanceof ScientistRover scientist) {
                 percepts.add(ASSyntax.createLiteral("iAmAScientist"));
                 percepts.add(

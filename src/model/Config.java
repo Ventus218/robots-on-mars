@@ -19,4 +19,5 @@ public final class Config {
     public static final int MINE_SAMPLE_DURATION_MS = 3000;
     public static final int COLLECT_SAMPLE_DURATION_MS = 2000;
     public static final int DEPOSIT_SAMPLES_DURATION_MS = 500;
+    public static final double RANDOM_MOVEMENT_PROBABILITY = 0.1;
 }

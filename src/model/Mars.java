@@ -155,7 +155,7 @@ public class Mars {
         return rover.marsView().knownTerrain().size() == area();
     }
 
-    synchronized public List<Direction> bestExploreDirections(Rover rover) {
+    synchronized public Optional<Direction> bestExploreDirection(Rover rover) {
         final var roverCoord = roverCoordinates().get(rover);
         final var knownCoord = rover.marsView().knownTerrain().keySet();
         final Function<Coordinates, Boolean> isBorder = coord -> coord.neighbours().stream()
@@ -183,7 +183,7 @@ public class Mars {
                 .map(d -> Tuple.of(d, d.toVector().dot(vector)))
                 .sorted(Comparator.<Tuple<Direction, Double>>comparingDouble(t -> t._2()).reversed())
                 .map(t -> t._1())
-                .toList();
+                .findFirst();
     }
 
     synchronized public Set<Coordinates> allCoordinates() {
@@ -205,10 +205,15 @@ public class Mars {
     }
 
     synchronized private boolean explore(Rover rover) {
-        final var direction = bestExploreDirections(rover).stream()
-                .findFirst()
-                .orElse(Direction.random());
-        return moveRover(rover, direction);
+        Optional<Direction> direction;
+        if (random.nextDouble() <= Config.RANDOM_MOVEMENT_PROBABILITY) {
+            final var availableDirections = new ArrayList<>(availableDirections(rover));
+            Collections.shuffle(availableDirections, random);
+            direction = availableDirections.stream().findFirst();
+        } else {
+            direction = bestExploreDirection(rover);
+        }
+        return moveRover(rover, direction.orElse(Direction.random()));
     }
 
     synchronized private boolean updateRoverBattery(Rover rover) {
