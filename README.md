@@ -131,9 +131,10 @@ emerges as rovers will eventually go back to base to recharge and once charged
 up they will be attracted to those unexplored areas near the base.
 
 ```
-+!explore : can(explore) & not(exploredEverywhere) <-
++!explore : not(theresScienceToDo) <-
     exploreAction.
 +!explore.
+-!explore.
 ```
 
 Computing this kind of behaviour is not trivial and therefore it was decided to
@@ -268,28 +269,32 @@ will subsume every other behaviour if needed (explained in the section about
 putting all the behaviours toghether).
 
 ```
-needToCharge :- // ... other conditions explained later
-needToCharge :- // ... other conditions explained later
-needToCharge :-
+batteryLow :- .intend(charge).
+batteryLow :-
     selfCoord(Pos) &
     baseCoord(Base) &
-    battery(B) &
     estimateBatteryUsage(Pos, Base, E) &
+    battery(B) &
     batterySafetyReserve(S) &
     B <= E + S.
 
-+!checkBattery : needToCharge <-
++battery(B) : batteryLow & not(.intend(charge)) <-
+    .drop_desire(loop);
+    .drop_desire(fastDeposit);
+    .print("Going to base to charge");
     !charge;
-    !!checkBattery.
-+!checkBattery <- !!checkBattery.
-
+    !!fastDeposit;
+    !!loop.
 +battery(0) <-
     .drop_all_desires;
     .print("Ran out of battery :(").
 
 +!charge <-
     !goToBase;
-    !rechargeFully.
+    .print("Charging...");
+    !rechargeFully;
+    .print("Completed charging").
++!charge.
 
 +!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
     recharge;
