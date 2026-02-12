@@ -90,6 +90,8 @@ cell(coord(X, Y), Terrain, Timestamp)
 // Timestamp is the UNIX timestamp
 ```
 
+Coordinates are always represented as `coord(X, Y)`
+
 ### Exploration
 
 #### Exploration perception
@@ -103,7 +105,7 @@ be data more up to date than what the rover's actually seeing.
 
 ```
 +see(C, Terrain) <- +cell(C, Terrain, system.time).
-// C is like "coord(X, Y)"
+// C represents the coordinates
 ```
 
 > **Note:**
@@ -135,7 +137,7 @@ up they will be attracted to those unexplored areas near the base.
 ```
 
 Computing this kind of behaviour is not trivial and therefore it was decided to
-implement it Java-side.
+implement it Java-side (exploreAction).
 
 ```Java
 // This function produces the best direction for the rover to explore
