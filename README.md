@@ -612,3 +612,14 @@ allCells([]).
 
 The `saveCellAction` is used by the rover to keep the model in sync with its
 belief base, allowing the GUI to accurately display each rover’s knowledge.
+
+### Testing
+
+Randomness plays a huge role in the rovers behaviour and therefore testing is
+quite difficult.
+
+The model and the rovers were partially covered by unit tests.
+
+In this case it would have been better to define fitness functions and evaluate
+them accross multiple simulations in order to achieve good automated testing.
+Unfortunatley i ran out of time and was not able to do that.
