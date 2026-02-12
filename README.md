@@ -1,5 +1,29 @@
 # Robots on Mars
 
+- [Abstract](#abstract)
+  - [Rovers](#rovers)
+  - [Environment](#environment)
+  - [Exploration](#exploration)
+  - [Sample collection](#sample-collection)
+  - [Energy management](#energy-management)
+  - [Communication](#communication)
+- [How to run it](#how-to-run-it)
+  - [Configuration](#configuration)
+- [Design](#design)
+  - [Knowledge representation](#knowledge-representation)
+  - [Exploration](#exploration-1)
+    - [Exploration perception](#exploration-perception)
+    - [Exploration movement](#exploration-movement)
+  - [Communication](#communication-1)
+    - [Emergent behaviour](#emergent-behaviour)
+  - [Battery management](#battery-management)
+  - [Samples collection](#samples-collection)
+  - [Sample deposit](#sample-deposit)
+    - ["Fast" deposit](#fast-deposit)
+  - [Putting the goals together](#putting-the-goals-together)
+  - [Critical performance optimization technique](#critical-performance-optimization-technique)
+- [Testing](#testing)
+
 ![Demo video](rovers.gif)
 
 On the left-hand side you can see all the roaming rovers and their properties.
