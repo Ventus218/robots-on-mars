@@ -9,7 +9,7 @@
   - [Communication](#communication)
 - [How to run it](#how-to-run-it)
   - [Configuration](#configuration)
-- [Design](#design)
+- [Design and implementation](#design-and-implementation)
   - [Knowledge representation](#knowledge-representation)
   - [Exploration](#exploration-1)
     - [Exploration perception](#exploration-perception)
@@ -168,7 +168,7 @@ public final class Config {
 }
 ```
 
-## Design
+## Design and implementation
 
 To make the project easier to understand, we will cover each main aspect
 separately, and then put everything together at the end.
