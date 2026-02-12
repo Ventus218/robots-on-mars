@@ -3,53 +3,53 @@
 ![Demo video](rovers.gif)
 
 On the left-hand side you can see all the roaming rovers and their properties.
-By clicking on the "Focus" button you can make the GUI present only what that
-rover actually knows.
+By clicking the **Focus** button, the GUI will display only what that rover
+actually knows.
 
-On the right-hand side there's Mars, you can see:
+On the right-hand side there is Mars. You can see:
 
 - Rovers (scientists have slightly different sprites)
-- Mining spots (are represented by a pickaxe)
+- Mining spots (represented by a pickaxe)
 - Samples (represented by test tubes)
-- Obstacles (represented by sprites that looks more like piles of poop)
-- Base (those gray squares in the middle)
-- Unkown area (represented by gray cells)
-- Antennas range (represented by a light blue overlay)
+- Obstacles (represented by sprites that look like piles of poop)
+- Base (the gray squares in the middle)
+- Unknown areas (represented by gray cells)
+- Antenna range (represented by a light blue overlay)
 
-If you are focusing on a rover you will be able to see only what he sees/knows.
-You will be able to see other rovers only if they are in of camera.
+If you focus on a rover, you will only see what it sees and knows. You will be
+able to see other rovers only if they are within its camera range.
 
 ## Abstract
 
-This project aims at creating a Jason MAS simulating the behaviour of multiple
-robots exploing and collecting samples on Mars.
+This project aims to create a Jason MAS simulating the behaviour of multiple
+robots exploring and collecting samples on Mars.
 
 ### Rovers
 
-Some new rovers just arrived on Mars to explore the planet, their main goals
-are:
+Some new rovers have just arrived on Mars to explore the planet. Their main
+goals are:
 
-- building a map of the area marking all points of interest
-- collect samples of specific rocks which may need drilling the terrain
-- transport samples at the main base where they will be stored long term
+- building a map of the area and marking all points of interest
+- collecting samples of specific rocks, which may require drilling the terrain
+- transporting samples to the main base, where they will be stored long term
 
 Each rover is equipped with:
 
 - a 360° camera
 - wheels
-- short range communication antenna
+- a short-range communication antenna
 - a battery
 
-Some of the rovers are "scientists" and therefore they are also equipped with:
+Some of the rovers are "scientists" and are therefore also equipped with:
 
-- drills for mining rocks samples
+- drills for mining rock samples
 - robotic arms to collect samples
 - limited sample storage
 
 ### Environment
 
-The environment will be generated randomly and will be modeled as a grid where
-each cell can represent:
+The environment is generated randomly and modeled as a grid in which each cell
+can represent:
 
 - a rover
 - flat empty surface
@@ -63,16 +63,16 @@ each cell can represent:
 Rovers should prioritize mapping areas closer to the base.
 
 They can only move one cell at a time following the cardinal directions. While
-moving they also map the environment thanks to their cameras.
+moving, they also map the environment using their cameras.
 
-### Samples collection
+### Sample collection
 
-Some samples are immediately collectable while others needs to be drilled.
+Some samples are immediately collectable, while others need to be drilled.
 
 Mining spots only need to be drilled once. Rovers are able to recognise spots
-that were already drilled thanks to their cameras.
+that have already been drilled thanks to their cameras.
 
-Each sample occupies the same amount of space in the storage.
+Each sample occupies the same amount of space in storage.
 
 ### Energy management
 
@@ -82,11 +82,11 @@ Each sample occupies the same amount of space in the storage.
 
 ### Communication
 
-There won't be any network infrastructure so the rovers will be able to exchange
-informations only when they are in range of their antennas.
+There is no network infrastructure, so rovers can exchange information only when
+they are within antenna range.
 
-The base is also equipped with an antenna and can store data as well as the
-rovers can.
+The base is also equipped with an antenna and can store data, just like the
+rovers.
 
 ## How to run it
 
@@ -96,8 +96,8 @@ jason robotsOnMars.mas2j
 
 ### Configuration
 
-By editing the [robotsOnMars.mas2j](/robotsOnMars.mas2j) file you can specify
-the number of robots to instantiate. Rover whose name ends with an "S" will be
+By editing the [robotsOnMars.mas2j](robotsOnMars.mas2j) file you can specify the
+number of robots to instantiate. Rovers whose names end with an "S" are
 scientists.
 
 ```
@@ -111,16 +111,16 @@ MAS robotsOnMars {
 
         curiosity rover;
         perseverance rover;
-        sojournerS rover; /* Scientists ends with an "S" */
+        sojournerS rover; /* Scientists end with an "S" */
 
     aslSourcePath: "src/agt";
 }
 ```
 
 There are multiple configuration parameters that can be edited directly in
-[Config.java](/src/model/Config.java)
+[Config.java](src/model/Config.java).
 
-```Java
+```java
 public final class Config {
     public static final int MARS_SIZE = 35;
     public static final float MARS_OBSTACLES_DENSITY = 0.05f;
@@ -146,17 +146,17 @@ public final class Config {
 
 ## Design
 
-To ease the reader understanding we'll cover each main aspect presented in the
-abstract separately, and in the end we'll put everything toghether.
+To make the project easier to understand, we will cover each main aspect
+separately, and then put everything together at the end.
 
 ### Knowledge representation
 
-It's helpful to describe how some beliefs are represented in order to better
+It is helpful to describe how some beliefs are represented in order to better
 understand the following sections.
 
-Rovers (as well as the base) will store information about Mars landscape in form
-of "cells". Each cell has coordinates, the perceived terrain and a timestamp of
-perception.
+Rovers (as well as the base) store information about the Martian landscape in
+the form of "cells". Each cell has coordinates, perceived terrain, and a
+timestamp of perception.
 
 ```
 cell(coord(X, Y), Terrain, Timestamp)
@@ -165,18 +165,18 @@ cell(coord(X, Y), Terrain, Timestamp)
 // Timestamp is the UNIX timestamp
 ```
 
-Coordinates are always represented as `coord(X, Y)`
+Coordinates are always represented as `coord(X, Y)`.
 
 ### Exploration
 
 #### Exploration perception
 
-While moving the rover is able to see around him and will perceive optical
-information about the environment.
+While moving, the rover can see around itself and perceives optical information
+about the environment.
 
-Each time the rover sees a cell it will update it's belief about that cell.
-There's no need to check previous information about that cell since there cannot
-be data more up to date than what the rover's actually seeing.
+Each time the rover sees a cell, it updates its belief about that cell. There is
+no need to check previous information about the cell since there cannot be data
+more up to date than what the rover is currently seeing.
 
 ```
 +see(C, Terrain) <- +cell(C, Terrain, system.time).
@@ -185,25 +185,25 @@ be data more up to date than what the rover's actually seeing.
 
 > **Note:**
 >
-> The reason why we do not remove previous data about the cell is that cells are
-> not actually stored as pure beliefs for performance reasons, a complete
-> explanation can be found next.
+> We do not remove previous data about the cell because cells are not actually
+> stored as pure beliefs for performance reasons. A complete explanation is
+> provided [later](#critical-performance-optimization-technique)
 
 #### Exploration movement
 
 Exploration is implemented following a simplified Motor-Schemas control
 architecture.
 
-Imagine that the rover is immersed in a potential field that attracts him
-towards unexplored regions. Unexplored regions that are closer to the rover
-attract him with a stronger force.
+Imagine that the rover is immersed in a potential field that attracts it toward
+unexplored regions. Unexplored regions that are closer to the rover attract it
+with a stronger force.
 
-This approach result in a behaviour that is not segmented and therefore very
+This approach results in behaviour that is not segmented and therefore very
 resilient and flexible.
 
-Eventually there will not be unexplored areas close to the base. This behaviour
-emerges as rovers will eventually go back to base to recharge and once charged
-up they will be attracted to those unexplored areas near the base.
+Eventually, there will be no unexplored areas close to the base. This behaviour
+emerges naturally: rovers eventually return to the base to recharge, and once
+charged they are attracted to unexplored areas near the base.
 
 ```
 +!explore : not(theresScienceToDo) <-
@@ -251,10 +251,10 @@ Optional<Direction> bestExploreDirection(Rover rover) {
 }
 ```
 
-We also introduce a bit of randomness (which is parametrized) that helps:
+We also introduce a bit of randomness (parameterized) that helps:
 
-- exiting possible local minima (unstable equilibrium)
-- reducing the occurrencies of robots exploring close to each other
+- escaping possible local minima (unstable equilibria)
+- reducing the frequency of robots exploring close to each other
 
 ```Java
 boolean explore(Rover rover) {
@@ -272,14 +272,14 @@ boolean explore(Rover rover) {
 
 ### Communication
 
-Communication is intuitively straightforward, rovers (as well as the base) will
-immediately transfer all their knowledge as soon as they get in contact with
-another rover (or base).
+Communication is straightforward: rovers (as well as the base) immediately
+transfer all their knowledge as soon as they come into contact with another
+rover (or the base).
 
-If the two entities exchanging knowledge keep in contact for a while they will
-keep exchanging knowledge at intervals. Intervals can be set but in order to
-avoid heavy computational loads to happens at the same time we add a random
-delay between 0 and 1 seconds on top of a base delay of 1 second.
+If two entities remain in contact for a while, they continue exchanging
+knowledge at intervals. Intervals can be configured, but to avoid heavy
+computational loads happening simultaneously, we add a random delay between 0
+and 1 second on top of a base delay of 1 second.
 
 ```
 +inRange(R) <- !sendKnowledge(R).
@@ -297,8 +297,8 @@ delay between 0 and 1 seconds on top of a base delay of 1 second.
 +!sendKnowledge(R).
 ```
 
-When rovers receive knowledge they'll have to merge it with their current one,
-this is done by comparing cells timestamps and keeping the newest data.
+When rovers receive knowledge, they merge it with their current knowledge by
+comparing cell timestamps and keeping the newest data.
 
 ```
 // >>>>>>>>>> IDIOMATIC IMPLEMENTATION <<<<<<<<<<
@@ -332,16 +332,15 @@ this is done by comparing cells timestamps and keeping the newest data.
 
 #### Emergent behaviour
 
-Even if rovers start spreading a lot without getting in contact they will
-eventually go back to the base to recharge and store there their knowledge which
-will now available for other rovers that will reach the base.
+Even if rovers spread out without contacting each other, they eventually return
+to the base to recharge and store their knowledge there. This knowledge then
+becomes available to other rovers that reach the base.
 
 ### Battery management
 
-The only actual catastrophic failure that can happen in the system is having a
-rover running out of battery. Therefore battery management is very important and
-will subsume every other behaviour if needed (explained in the section about
-putting all the behaviours toghether).
+The only catastrophic failure that can occur in the system is a rover running
+out of battery power. Therefore, battery management is very important and
+subsumes every other behaviour when necessary.
 
 ```
 batteryLow :- .intend(charge).
@@ -384,29 +383,27 @@ batteryLow :-
 estimateBatteryUsage(From, To, math.sqrt((D*D) / 2) * 2) :- distance(From, To, D).
 ```
 
-Basically the rover will decide to go back to the base once it's battery reaches
-a dinamically computed treshold. This treshold is computed by estimating the
-amount of energy needed to go back to the base plus a safety margin.
+Basically, the rover decides to return to the base once its battery reaches a
+dynamically computed threshold. This threshold is computed by estimating the
+energy needed to return to the base plus a safety margin.
 
-The estimate of how much energy is needed to go from one place to another is
-based on a pessimistic assumption. The worst case in which the rover can be is
-when positioned diagonally with respect to the target coordinates (because
-rovers cannot move diagonally). This means that the number of cells he'll have
-to walk is the sum of the two legs of an isosceles right triangle which given
-the distance (hypotenuse) D can be computed as `sqrt((D^2) / 2) * 2`.
+The estimate is based on a pessimistic assumption. The worst case occurs when
+the rover is positioned diagonally relative to the target coordinates (since
+rovers cannot move diagonally). In this case, the rover must travel the sum of
+the two legs of an isosceles right triangle. Given the distance (hypotenuse) D,
+this can be computed as `sqrt((D^2) / 2) * 2`
 
-As soon as the rover reaches this treshold it will immediately go back to base
-and charge fully. The `goToBase` still introduce a just bit of randomness to
+As soon as the rover reaches this threshold, it immediately returns to the base
+and charges fully. The `goToBase` plan still introduces a bit of randomness to
 reduce the probability of the rover getting stuck.
 
 ### Samples collection
 
-The rover will go to the nearest cell having a mining spot or a sample to
+The rover goes to the nearest cell containing a mining spot or a sample to
 collect.
 
-Actually distance is not the only thing taken into consideration, in fact the
-rover estimates whether it has enough battery to drill or pickup the sample and
-to go back to the base safely.
+Distance is not the only factor considered: the rover also estimates whether it
+has enough battery to drill or pick up the sample and safely return to the base.
 
 Each code segment is explained with comments.
 
@@ -466,9 +463,9 @@ extractSecondFromTuple([tuple(A, B) | Tail], [B | Rest]) :-
 
 ### Sample deposit
 
-Every time the rover picks up a sample it will reactively check if it has
-reached its maximum carrying capaticty. If so it will go back to the base just
-to deposit those samples.
+Every time the rover picks up a sample, it reactively checks whether it has
+reached its maximum carrying capacity. If so, it returns to the base to deposit
+the samples.
 
 ```
 +collectedSamples(_) : not(.intend(deposit)) & not(batteryLow) & not(hasSpaceForSample) <-
@@ -490,11 +487,11 @@ to deposit those samples.
 
 #### "Fast" deposit
 
-It is reasonable that if the rover happens to reach the base even when not full
-of samples it should deposit them anyway (i call it "fast" deposit).
+If the rover happens to reach the base even when it is not full of samples, it
+should deposit them anyway (this is called "fast deposit").
 
-Fast deposit is a goal itself and will continously check if the rover happens to
-be on the base. Since the plan is concurrent with the reactive counterpart it is
+Fast deposit is a goal that continuously checks whether the rover is on the
+base. Since this plan is concurrent with the reactive counterpart, it is
 necessary to make `deposit` a singleton plan.
 
 ```
@@ -512,22 +509,21 @@ necessary to make `deposit` a singleton plan.
 +!fastDeposit <- !!fastDeposit.
 ```
 
-### Putting various goals toghether
+### Putting the goals together
 
-We have some goals that can be executed concurrently while other cannot.
+Some goals can be executed concurrently, while others cannot.
 
-Since most of the goals result in the robot moving they need to be exclusive:
+Since most goals involve movement, they must be exclusive:
 
 - exploring
 - collecting science
 - depositing samples
 - charging
 
-The only goal that can get some benefits in a concurrent execution if the "fast"
-deposit.
+The only goal that benefits from concurrent execution is "fast deposit".
 
-Given these conditions we've structured the non-concurrent goals like a
-main-loop architecture, while fastDeposit is a goal on its own:
+Given these conditions, we structure the non-concurrent goals using a main-loop
+architecture, while `fastDeposit` is a goal on its own.
 
 ```
 !loop.
@@ -542,12 +538,12 @@ main-loop architecture, while fastDeposit is a goal on its own:
     !!loop.
 ```
 
-This type of architecture work as long as `science` and `explore` plans execute
-short lived task that we can see as "atomic".
+This architecture works as long as `science` and `explore` plans execute
+short-lived tasks that can be considered "atomic".
 
-Battery management and samples deposit are triggered reactively, they drop the
-loop desire, do their stuff and then resume it. (They can be seen like
-"interrupts")
+Battery management and sample deposit are triggered reactively: they drop the
+loop desire, perform their tasks, and then resume it (they can be seen as
+"interrupts").
 
 Again the fact that they are reactively triggered requires careful handling and
 checking that the relative plans are not already being executed.
@@ -581,12 +577,12 @@ batteryLow :-
 
 ### Critical performance optimization technique
 
-Rovers will in general store huge amount of cells, not less than thousands with
-decent size maps. This means that storing each cell as a belief would rapidly
-make incredibly slow each scan of the belief base.
+Rovers typically store huge amounts of cells, at least thousands in reasonably
+sized maps. Storing each cell as a belief would quickly make each scan of the
+belief base extremely slow.
 
-In order to fix this we've used a single Map storing cells data, this makes
-access constant instead of linear.
+To solve this, we use a single map to store cell data, which makes access
+constant instead of linear.
 
 ```
 // The Map is initialized lazilly
@@ -614,6 +610,5 @@ allCells(Cells) :-
 allCells([]).
 ```
 
-The `saveCellAction` is an action that is used by the rover just to keep the
-model in sync with its belief base. This is done in order to allow the GUI to
-show precisely what's the current knowledge of each rover.
+The `saveCellAction` is used by the rover to keep the model in sync with its
+belief base, allowing the GUI to accurately display each rover’s knowledge.
