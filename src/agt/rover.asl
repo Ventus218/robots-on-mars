@@ -41,7 +41,6 @@ allCells([]).
 
 // >>>>>>>>>> EXPLORE SECTION <<<<<<<<<<
 +!explore : not(theresScienceToDo) <-
-    .print("explore");
     exploreAction.
 +!explore.
 -!explore.
@@ -61,6 +60,7 @@ batteryLow :-
 // >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
 +battery(B) : batteryLow & not(.intend(charge)) <-
     .drop_desire(loop);
+    .print("Going to base to charge");
     !charge;
     !!loop.
 +battery(0) <-
@@ -68,8 +68,8 @@ batteryLow :-
     .print("Ran out of battery :(").
 
 +!charge <-
-    .print("Going to base to charge");
     !goToBase;
+    .print("Charging...");
     !rechargeFully;
     .print("Completed charging").
 +!charge.
@@ -84,6 +84,7 @@ batteryLow :-
 
 +collectedSamples(_) : not(.intend(deposit)) & not(batteryLow) & not(hasSpaceForSample) <- 
     .drop_desire(loop);
+    .print("Going to base to deposit samples");
     !deposit;
     !!loop.
 
@@ -93,20 +94,17 @@ batteryLow :-
     !!loop.
 
 +!deposit : not(inBase) <-
-    .print("deposit");
     ?baseCoord(Base);
     !moveTowards(Base);
     !deposit.
 +!deposit : inBase <-
-    .print("deposit");
     depositSamplesAction;
-    !charge.
+    .print("Samples deposited").
 +!deposit.
 -!deposit.
 
 // There's science work to do right next to me, i'll do it
 +!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
-    .print("sicence");
     !doScienceWork(cell(Coord, Terr, TS));
     if (Terr == sample) {
         .wait(cell(Coord, empty, _));
@@ -115,7 +113,6 @@ batteryLow :-
     }.
 // There's science work to do i'll move towards it
 +!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) <-
-    .print("sicence");
     !moveTowards(Coord).
 // There's no science work to do right now.
 +!science.
