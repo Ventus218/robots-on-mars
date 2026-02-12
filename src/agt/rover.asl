@@ -1,9 +1,5 @@
 /* Initial beliefs and rules */
 batterySafetyReserve(10).
-can(explore) :- not(needToCharge) & not(.intend(explore)) & not(iAmAScientist).
-can(explore) :- not(needToCharge) & not(.intend(explore)) & hasSpaceForSample & not(theresScienceToDo).
-can(science) :- not(needToCharge) & not(.intend(science)) & hasSpaceForSample.
-can(deposit) :- not(needToCharge) & not(.intend(deposit)).
 
 // Think about this as a belief, it's just a way to initialize it as soon as it's needed.
 +!cellMap(M) : cellMapInstance(M).
@@ -31,28 +27,21 @@ allCells([]).
 
 /* Initial goals */
 
-!init.
+!loop.
 
 /* Plans */
 
-+!init : iAmAScientist <- 
-    !!checkBattery;
-    !!checkDeposit;
-    !!checkScience;
-    !!checkExplore.
-+!init <- 
-    !!checkBattery;
-    !!checkExplore.
++!loop : iAmAScientist <- 
+    !science;
+    !explore;
+    !!loop.
++!loop <- 
+    !explore;
+    !!loop.
 
 // >>>>>>>>>> EXPLORE SECTION <<<<<<<<<<
-
-+!checkExplore : can(explore) <- 
-    !explore;
-    !!checkExplore.
-+!checkExplore <- !!checkExplore.
-
-+!explore : can(explore) & not(exploredEverywhere) <-
-    .print("exploring");
++!explore : not(theresScienceToDo) <-
+    .print("explore");
     exploreAction.
 +!explore.
 -!explore.
@@ -60,31 +49,30 @@ allCells([]).
 +see(C, Terrain) <-
     +cell(C, Terrain, system.time).
 
-// >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
-needToCharge :- .intend(charge).
-needToCharge :- exploredEverywhere & not(theresScienceToDo) & battery(B) & batteryCapacity(C) & B < C.
-needToCharge :- 
+batteryLow :- .intend(charge).
+batteryLow :-
     selfCoord(Pos) & 
     baseCoord(Base) & 
-    battery(B) &
     estimateBatteryUsage(Pos, Base, E) & 
+    battery(B) &
     batterySafetyReserve(S) & 
     B <= E + S.
 
-+!checkBattery : needToCharge <-
-    .print("Going to base to charge");
+// >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
++battery(B) : batteryLow & not(.intend(charge)) <-
+    .drop_desire(loop);
     !charge;
-    .print("Completed charging");
-    !!checkBattery.
-+!checkBattery <- !!checkBattery.
-
+    !!loop.
 +battery(0) <-
     .drop_all_desires;
     .print("Ran out of battery :(").
 
 +!charge <-
+    .print("Going to base to charge");
     !goToBase;
-    !rechargeFully.
+    !rechargeFully;
+    .print("Completed charging").
++!charge.
 
 +!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
     recharge;
@@ -94,45 +82,46 @@ needToCharge :-
 // >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
 // If we are here we assume that the rover is a Scientist
 
-+!checkDeposit : can(deposit) <-
++collectedSamples(_) : not(.intend(deposit)) & not(batteryLow) & not(hasSpaceForSample) <- 
+    .drop_desire(loop);
     !deposit;
-    !!checkDeposit.
-+!checkDeposit <- !!checkDeposit.
+    !!loop.
 
-+!deposit : can(deposit) & not(inBase) & not(hasSpaceForSample) <- 
++selfCoord(_) : not(.intend(deposit)) & not(batteryLow) & inBase & collectedSamples(S) & S > 0 <- 
+    .drop_desire(loop);
+    !deposit;
+    !!loop.
+
++!deposit : not(inBase) <-
+    .print("deposit");
     ?baseCoord(Base);
     !moveTowards(Base);
     !deposit.
-+!deposit : can(deposit) & inBase & collectedSamples(S) & S > 0 <- 
++!deposit : inBase <-
+    .print("deposit");
     depositSamplesAction;
-    !deposit.
+    !charge.
 +!deposit.
 -!deposit.
 
-+!checkScience : can(science) & theresScienceToDo <- 
-    !science;
-    !!checkScience.
-+!checkScience <- !!checkScience.
-
 // There's science work to do right next to me, i'll do it
-+!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
++!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
+    .print("sicence");
     !doScienceWork(cell(Coord, Terr, TS));
     if (Terr == sample) {
         .wait(cell(Coord, empty, _));
     } else {
         .wait(cell(Coord, sample, _));
-    }
-    !science.
+    }.
 // There's science work to do i'll move towards it
-+!science : can(science) & bestScienceWork(cell(Coord, Terr, TS)) <-
-    !moveTowards(Coord);
-    !science.
++!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) <-
+    .print("sicence");
+    !moveTowards(Coord).
 // There's no science work to do right now.
 +!science.
 -!science.
 
-theresScienceToDo :- .intend(science).
-theresScienceToDo :- bestScienceWork(_).
+theresScienceToDo :- hasSpaceForSample & bestScienceWork(_).
 
 bestScienceWork(Cell) :- 
     scienceWorkAt(Cells) &
