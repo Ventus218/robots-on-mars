@@ -193,3 +193,69 @@ boolean explore(Rover rover) {
     return moveRover(rover, direction.orElse(Direction.random()));
 }
 ```
+
+### Communication
+
+Communication is intuitively straightforward, rovers (as well as the base) will
+immediately transfer all their knowledge as soon as they get in contact with
+another rover (or base).
+
+If the two entities exchanging knowledge keep in contact for a while they will
+keep exchanging knowledge at intervals. Intervals can be set but in order to
+avoid heavy computational loads to happens at the same time we add a random
+delay between 0 and 1 seconds on top of a base delay of 1 second.
+
+```
++inRange(R) <- !sendKnowledge(R).
+
+// If i'm in range with R i will send him knowledge and reschedule sendKnowledge
+// in case we keep staying in range for some time.
++!sendKnowledge(R) : inRange(R) <-
+    ?allCells(Cells);
+    .send(R, achieve, mergeMarsView(Cells));
+    // Reschedule plan
+    .random(Rng);
+    .wait(Rng * 1000);
+    .wait(1000);
+    !!sendKnowledge(R).
++!sendKnowledge(R).
+```
+
+When rovers receive knowledge they'll have to merge it with their current one,
+this is done by comparing cells timestamps and keeping the newest data.
+
+```
+// >>>>>>>>>> IDIOMATIC IMPLEMENTATION <<<<<<<<<<
++!mergeMarsView([Cell | Tail]) <-
+    !updateCellIfNewer(Cell);
+    !mergeMarsView(Tail).
++!mergeMarsView([]).
+
+// If i have newer data about that cell i will do nothing.
++!updateCellIfNewer(cell(Coord, Terrain, Timestamp)) :
+    cell(Coord, _, Timestamp2) & Timestamp <= Timestamp2.
+
+// Otherwise i will update my knowledge about that cell.
++!updateCellIfNewer(cell(Coord, Terrain, Timestamp)) <-
+    +cell(Coord, Terrain, Timestamp).
+
+// >>>>>>>>>> ACTUAL IMPLEMENTATION <<<<<<<<<<
++!mergeMarsView(Cells) <-
+    !cellMap(M);
+    src.agt.MergeKnowledgeAction(M, Cells).
+```
+
+> **Note:**
+>
+> The O(N^2) complexity issue is handled by internally using a map (explained
+> later). But still iterating over a large list of cells remains a heavy task
+> since we need to scan the belief base at every iteration step.
+>
+> The actual implementation uses an internal action which allows to offload the
+> iteration from the Jason engine making it much faster.
+
+#### Emergent behaviour
+
+Even if rovers start spreading a lot without getting in contact they will
+eventually go back to the base to recharge and store there their knowledge which
+will now available for other rovers that will reach the base.
