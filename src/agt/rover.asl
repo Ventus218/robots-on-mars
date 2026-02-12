@@ -28,6 +28,7 @@ allCells([]).
 /* Initial goals */
 
 !loop.
+!fastDeposit.
 
 /* Plans */
 
@@ -60,8 +61,10 @@ batteryLow :-
 // >>>>>>>>>> BATTERY SECTION <<<<<<<<<<
 +battery(B) : batteryLow & not(.intend(charge)) <-
     .drop_desire(loop);
+    .drop_desire(fastDeposit);
     .print("Going to base to charge");
     !charge;
+    !!fastDeposit;
     !!loop.
 +battery(0) <-
     .drop_all_desires;
@@ -82,22 +85,24 @@ batteryLow :-
 // >>>>>>>>>> SCIENCE SECTION <<<<<<<<<<
 // If we are here we assume that the rover is a Scientist
 
++!fastDeposit : not(.intend(deposit)) & not(batteryLow) & inBase & collectedSamples(S) & S > 0 <- 
+    .drop_desire(loop);
+    !deposit;
+    !!fastDeposit;
+    !!loop.
++!fastDeposit <- !!fastDeposit.
+
 +collectedSamples(_) : not(.intend(deposit)) & not(batteryLow) & not(hasSpaceForSample) <- 
     .drop_desire(loop);
     .print("Going to base to deposit samples");
     !deposit;
     !!loop.
 
-+selfCoord(_) : not(.intend(deposit)) & not(batteryLow) & inBase & collectedSamples(S) & S > 0 <- 
-    .drop_desire(loop);
-    !deposit;
-    !!loop.
-
-+!deposit : not(inBase) <-
++!deposit : not(.intend(deposit)) & not(inBase) <-
     ?baseCoord(Base);
     !moveTowards(Base);
     !deposit.
-+!deposit : inBase <-
++!deposit : not(.intend(deposit)) & inBase <-
     depositSamplesAction;
     .print("Samples deposited").
 +!deposit.
@@ -106,11 +111,11 @@ batteryLow :-
 // There's science work to do right next to me, i'll do it
 +!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
     !doScienceWork(cell(Coord, Terr, TS));
-    if (Terr == sample) {
-        .wait(cell(Coord, empty, _));
-    } else {
-        .wait(cell(Coord, sample, _));
-    }.
+    // if (Terr == sample) {
+    //     .wait(cell(Coord, empty, _));
+    // } else {
+    //     .wait(cell(Coord, sample, _));
+    // }.
 // There's science work to do i'll move towards it
 +!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) <-
     !moveTowards(Coord).
