@@ -12,14 +12,14 @@
 
 MAS robotsOnMars {
 
-    environment: src.env.Env(10)
+    environment: src.env.Env()
 
-    agents: 
+    agents:
         base base;
 
-        tonyS rover;
-        frank rover;
-        bill rover;
+        curiosity rover;
+        perseverance rover;
+        sojournerS rover; /* Scientists ends with an "S" */
 
     aslSourcePath: "src/agt";
 }

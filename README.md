@@ -1,5 +1,24 @@
 # Robots on Mars
 
+![Demo video](rovers.gif)
+
+On the left-hand side you can see all the roaming rovers and their properties.
+By clicking on the "Focus" button you can make the GUI present only what that
+rover actually knows.
+
+On the right-hand side there's Mars, you can see:
+
+- Rovers (scientists have slightly different sprites)
+- Mining spots (are represented by a pickaxe)
+- Samples (represented by test tubes)
+- Obstacles (represented by sprites that looks more like piles of poop)
+- Base (those gray squares in the middle)
+- Unkown area (represented by gray cells)
+- Antennas range (represented by a light blue overlay)
+
+If you are focusing on a rover you will be able to see only what he sees/knows.
+You will be able to see other rovers only if they are in of camera.
+
 ## Abstract
 
 This project aims at creating a Jason MAS simulating the behaviour of multiple
@@ -68,6 +87,62 @@ informations only when they are in range of their antennas.
 
 The base is also equipped with an antenna and can store data as well as the
 rovers can.
+
+## How to run it
+
+```sh
+jason robotsOnMars.mas2j
+```
+
+### Configuration
+
+By editing the [robotsOnMars.mas2j](/robotsOnMars.mas2j) file you can specify
+the number of robots to instantiate. Rover whose name ends with an "S" will be
+scientists.
+
+```
+/* ... */
+MAS robotsOnMars {
+
+    environment: src.env.Env()
+
+    agents:
+        base base;
+
+        curiosity rover;
+        perseverance rover;
+        sojournerS rover; /* Scientists ends with an "S" */
+
+    aslSourcePath: "src/agt";
+}
+```
+
+There are multiple configuration parameters that can be edited directly in
+[Config.java](/src/model/Config.java)
+
+```Java
+public final class Config {
+    public static final int MARS_SIZE = 35;
+    public static final float MARS_OBSTACLES_DENSITY = 0.05f;
+    public static final float MARS_SAMPLES_DENSITY = 0.005f;
+    public static final float MARS_MINING_SPOTS_DENSITY = 0.01f;
+    public static final int MARS_BASE_SIZE = 4;
+    public static final int MARS_BASE_ANTENNA_RANGE = 7;
+    public static final int ROVER_BATTERY_CAPACITY = 100;
+    public static final int ROVER_CAMERA_RANGE = 3;
+    public static final int ROVER_ANTENNA_RANGE = 5;
+    public static final int ROVER_MOVEMENT_ENERGY_COST = 1;
+    public static final int ROVER_CHARGING_ENERGY_AMOUNT = 10;
+    public static final int SCIENTIST_SAMPLES_CAPACITY = 4;
+    public static final int SCIENTIST_MINING_SAMPLE_ENERGY_COST = 10;
+    public static final int MOVEMENT_DURATION_MS = 1000;
+    public static final int RECHARGE_DURATION_MS = 2000;
+    public static final int MINE_SAMPLE_DURATION_MS = 3000;
+    public static final int COLLECT_SAMPLE_DURATION_MS = 2000;
+    public static final int DEPOSIT_SAMPLES_DURATION_MS = 500;
+    public static final double RANDOM_MOVEMENT_PROBABILITY = 0.1;
+}
+```
 
 ## Design
 
@@ -323,3 +398,222 @@ the distance (hypotenuse) D can be computed as `sqrt((D^2) / 2) * 2`.
 As soon as the rover reaches this treshold it will immediately go back to base
 and charge fully. The `goToBase` still introduce a just bit of randomness to
 reduce the probability of the rover getting stuck.
+
+### Samples collection
+
+The rover will go to the nearest cell having a mining spot or a sample to
+collect.
+
+Actually distance is not the only thing taken into consideration, in fact the
+rover estimates whether it has enough battery to drill or pickup the sample and
+to go back to the base safely.
+
+Each code segment is explained with comments.
+
+```
+// There's science work to do right next to me, i'll do it
++!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) & selfCoord(Pos) & adjacent(Pos, Coord) <-
+    !doScienceWork(cell(Coord, Terr, TS)).
+// There's science work to do i'll move towards it
++!science : theresScienceToDo & bestScienceWork(cell(Coord, Terr, TS)) <-
+    !moveTowards(Coord).
+// There's no science work to do right now.
++!science.
+-!science.
+
+theresScienceToDo :- hasSpaceForSample & bestScienceWork(_).
+
+bestScienceWork(Cell) :-
+    scienceWorkAt(Cells) &
+    selectScienceWork(Cell, Cells).
+
+// Given a list of cells we choose the first one
+selectScienceWork(cell(Coord, Terr, TS), [cell(Coord, Terr, TS) | T]) :-
+    scienceBatteryCost(Terr, Cost) &
+    selfCoord(Pos) &
+    baseCoord(Base) &
+    estimateBatteryUsage(Pos, Coord, GoEnergy) &
+    estimateBatteryUsage(Coord, Base, ReturnEnergy) &
+    battery(B) &
+    batterySafetyReserve(Reserve) &
+    GoEnergy + Cost + ReturnEnergy + Reserve <= B.
+selectScienceWork(Cell, [_ | T]) :- selectScienceWork(Cell, T).
+
+// Here we choose the appropriate action to perform wether there's a sample or a mining spot
++!doScienceWork(cell(Coord, sample, _)) : hasSpaceForSample <-
+    collectSampleAction(Coord).
++!doScienceWork(cell(Coord, miningSpot, _)) <-
+    mineSampleAction(Coord).
+
+// Check that theres at least one slot for new samples
+hasSpaceForSample :- collectedSamples(S) & samplesCapacity(C) & S < C.
+
+scienceBatteryCost(miningSpot, Cost) :- miningBatteryCost(Cost).
+scienceBatteryCost(sample, 0).
+
+// Find all coordinates for which there's science work to do and sort them by distance
+scienceWorkAt(WorkCells) :-
+    selfCoord(Pos) &
+    allCells(Cells) &
+    .findall(tuple(D, cell(C, Terr, TS)), .member(cell(C, Terr, TS), Cells) & (Terr == miningSpot | Terr == sample) & distance(Pos, C, D), Works) &
+    .sort(Works, Sorted) &
+    extractSecondFromTuple(Sorted, WorkCells).
+
+extractSecondFromTuple([], []).
+extractSecondFromTuple([tuple(A, B) | Tail], [B | Rest]) :-
+    extractSecondFromTuple(Tail, Rest).
+```
+
+### Sample deposit
+
+Every time the rover picks up a sample it will reactively check if it has
+reached its maximum carrying capaticty. If so it will go back to the base just
+to deposit those samples.
+
+```
++collectedSamples(_) : not(.intend(deposit)) & not(batteryLow) & not(hasSpaceForSample) <-
+    .drop_desire(loop);
+    .print("Going to base to deposit samples");
+    !deposit;
+    !!loop.
+
++!deposit : not(.intend(deposit)) & not(inBase) <-
+    ?baseCoord(Base);
+    !moveTowards(Base);
+    !deposit.
++!deposit : not(.intend(deposit)) & inBase <-
+    depositSamplesAction;
+    .print("Samples deposited").
++!deposit.
+-!deposit.
+```
+
+#### "Fast" deposit
+
+It is reasonable that if the rover happens to reach the base even when not full
+of samples it should deposit them anyway (i call it "fast" deposit).
+
+Fast deposit is a goal itself and will continously check if the rover happens to
+be on the base. Since the plan is concurrent with the reactive counterpart it is
+necessary to make `deposit` a singleton plan.
+
+```
+/* Initial goals */
+
+!fastDeposit.
+
+// ...
+
++!fastDeposit : not(.intend(deposit)) & not(batteryLow) & inBase & collectedSamples(S) & S > 0 <-
+    .drop_desire(loop);
+    !deposit;
+    !!fastDeposit;
+    !!loop.
++!fastDeposit <- !!fastDeposit.
+```
+
+### Putting various goals toghether
+
+We have some goals that can be executed concurrently while other cannot.
+
+Since most of the goals result in the robot moving they need to be exclusive:
+
+- exploring
+- collecting science
+- depositing samples
+- charging
+
+The only goal that can get some benefits in a concurrent execution if the "fast"
+deposit.
+
+Given these conditions we've structured the non-concurrent goals like a
+main-loop architecture, while fastDeposit is a goal on its own:
+
+```
+!loop.
+!fastDeposit.
+
++!loop : iAmAScientist <-
+    !science;
+    !explore;
+    !!loop.
++!loop <-
+    !explore;
+    !!loop.
+```
+
+This type of architecture work as long as `science` and `explore` plans execute
+short lived task that we can see as "atomic".
+
+Battery management and samples deposit are triggered reactively, they drop the
+loop desire, do their stuff and then resume it. (They can be seen like
+"interrupts")
+
+Again the fact that they are reactively triggered requires careful handling and
+checking that the relative plans are not already being executed.
+
+```
+batteryLow :- .intend(charge).
+batteryLow :-
+    selfCoord(Pos) &
+    baseCoord(Base) &
+    estimateBatteryUsage(Pos, Base, E) &
+    battery(B) &
+    batterySafetyReserve(S) &
+    B <= E + S.
+
++battery(B) : batteryLow & not(.intend(charge)) <-
+    .drop_desire(loop);
+    .drop_desire(fastDeposit);
+    .print("Going to base to charge");
+    !charge;
+    !!fastDeposit;
+    !!loop.
+
+// ...
+
++collectedSamples(_) : not(.intend(deposit)) & not(batteryLow) & not(hasSpaceForSample) <-
+    .drop_desire(loop);
+    .print("Going to base to deposit samples");
+    !deposit;
+    !!loop.
+```
+
+### Critical performance optimization technique
+
+Rovers will in general store huge amount of cells, not less than thousands with
+decent size maps. This means that storing each cell as a belief would rapidly
+make incredibly slow each scan of the belief base.
+
+In order to fix this we've used a single Map storing cells data, this makes
+access constant instead of linear.
+
+```
+// The Map is initialized lazilly
++!cellMap(M) : cellMapInstance(M).
+@[atomic]
++!cellMap(M) <-
+    .map.create(M);
+    +cellMapInstance(M).
+
+// Writer proxy on the map
++cell(Coord, Terrain, Timestamp) <-
+    !cellMap(M);
+    saveCellAction(Coord, Terrain, Timestamp);
+    .map.put(M, Coord, data(Terrain, Timestamp));
+    -cell(Coord, Terrain, Timestamp).
+
+// Reader proxy on the map
+cell(Coord, Terrain, Timestamp) :-
+    cellMapInstance(M) &
+    .map.get(M, Coord, data(Terrain, Timestamp)).
+
+allCells(Cells) :-
+    cellMapInstance(M) &
+    .findall(cell(Coord, Terrain, TS), .map.key(M, Coord) & .map.get(M, Coord, data(Terrain, TS)), Cells).
+allCells([]).
+```
+
+The `saveCellAction` is an action that is used by the rover just to keep the
+model in sync with its belief base. This is done in order to allow the GUI to
+show precisely what's the current knowledge of each rover.

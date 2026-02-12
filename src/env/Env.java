@@ -55,11 +55,6 @@ public class Env extends Environment {
     public void init(String[] args) {
         super.init(args);
         Env.instance = this;
-        try {
-            addPercept(ASSyntax.parseLiteral("percept(" + args[0] + ")"));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
 
         SwingUtilities.invokeLater(() -> {
             try {
