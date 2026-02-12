@@ -259,3 +259,62 @@ this is done by comparing cells timestamps and keeping the newest data.
 Even if rovers start spreading a lot without getting in contact they will
 eventually go back to the base to recharge and store there their knowledge which
 will now available for other rovers that will reach the base.
+
+### Battery management
+
+The only actual catastrophic failure that can happen in the system is having a
+rover running out of battery. Therefore battery management is very important and
+will subsume every other behaviour if needed (explained in the section about
+putting all the behaviours toghether).
+
+```
+needToCharge :- // ... other conditions explained later
+needToCharge :- // ... other conditions explained later
+needToCharge :-
+    selfCoord(Pos) &
+    baseCoord(Base) &
+    battery(B) &
+    estimateBatteryUsage(Pos, Base, E) &
+    batterySafetyReserve(S) &
+    B <= E + S.
+
++!checkBattery : needToCharge <-
+    !charge;
+    !!checkBattery.
++!checkBattery <- !!checkBattery.
+
++battery(0) <-
+    .drop_all_desires;
+    .print("Ran out of battery :(").
+
++!charge <-
+    !goToBase;
+    !rechargeFully.
+
++!rechargeFully : battery(B) & batteryCapacity(C) & B < C <-
+    recharge;
+    !rechargeFully.
++!rechargeFully.
+
+// ...
+
+// Estimating the amount of energy needed to go From a position To another.
+// Worst case scenario the rover will have to walk the hypotenuse of an isosceles right triangle
+// having leg equals to X. And the rover will have to travel X*2 cells to reach the base.
+estimateBatteryUsage(From, To, math.sqrt((D*D) / 2) * 2) :- distance(From, To, D).
+```
+
+Basically the rover will decide to go back to the base once it's battery reaches
+a dinamically computed treshold. This treshold is computed by estimating the
+amount of energy needed to go back to the base plus a safety margin.
+
+The estimate of how much energy is needed to go from one place to another is
+based on a pessimistic assumption. The worst case in which the rover can be is
+when positioned diagonally with respect to the target coordinates (because
+rovers cannot move diagonally). This means that the number of cells he'll have
+to walk is the sum of the two legs of an isosceles right triangle which given
+the distance (hypotenuse) D can be computed as `sqrt((D^2) / 2) * 2`.
+
+As soon as the rover reaches this treshold it will immediately go back to base
+and charge fully. The `goToBase` still introduce a just bit of randomness to
+reduce the probability of the rover getting stuck.
