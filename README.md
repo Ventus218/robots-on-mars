@@ -1,5 +1,7 @@
 # Robots on Mars
 
+<!-- toc -->
+
 - [Abstract](#abstract)
   - [Rovers](#rovers)
   - [Environment](#environment)
@@ -9,7 +11,8 @@
   - [Communication](#communication)
 - [How to run it](#how-to-run-it)
   - [Configuration](#configuration)
-- [Design and implementation](#design-and-implementation)
+- [Design](#design)
+- [Implementation](#implementation)
   - [Knowledge representation](#knowledge-representation)
   - [Exploration](#exploration-1)
     - [Exploration perception](#exploration-perception)
@@ -23,6 +26,8 @@
   - [Putting the goals together](#putting-the-goals-together)
   - [Critical performance optimization technique](#critical-performance-optimization-technique)
 - [Testing](#testing)
+
+<!-- tocstop -->
 
 ![Demo video](rovers.gif)
 
@@ -168,7 +173,24 @@ public final class Config {
 }
 ```
 
-## Design and implementation
+## Design
+
+The overall design is quite simple. There are 5 main behaviours that needs to be
+integrated:
+
+- Knowledge exchange
+- Exploration
+- Science collection
+- Local sample storage management
+- Battery management
+
+Knowledge exchange is the only one that can be carried out completely in
+parallel with all the others.
+
+Most important behaviours subsume less important ones, in the previous list they
+are sorted in ascending order.
+
+## Implementation
 
 To make the project easier to understand, we will cover each main aspect
 separately, and then put everything together at the end.
@@ -598,6 +620,11 @@ batteryLow :-
     !deposit;
     !!loop.
 ```
+
+> **Note:**
+>
+> In this section the Knowledge exchange behaviour was not covered as it is
+> trivially parallel to all the other behaviours.
 
 ### Critical performance optimization technique
 
