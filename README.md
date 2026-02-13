@@ -12,6 +12,7 @@
 - [How to run it](#how-to-run-it)
   - [Configuration](#configuration)
 - [Design](#design)
+  - [Environment](#environment-1)
 - [Implementation](#implementation)
   - [Knowledge representation](#knowledge-representation)
   - [Exploration](#exploration-1)
@@ -189,6 +190,18 @@ parallel with all the others.
 
 Most important behaviours subsume less important ones, in the previous list they
 are sorted in ascending order.
+
+### Environment
+
+Rovers have access to the following data perceived by the environment:
+
+- Short range optical information (about Mars landscape and nearby rovers)
+- Current battery and battery capacity
+- Current position (coordinates)
+- Base position (coordinates)
+- Rovers (or base) reachable by the communication antenna
+- Number of collected samples and maximum sample capacity
+- Parameters like the energy cost of mining samples etc...
 
 ## Implementation
 
